@@ -2,3 +2,8 @@ template: |
   # Titlesss
 
   $CHANGES
+branches:
+  - dev
+  - test-on-branch
+  - master
+
