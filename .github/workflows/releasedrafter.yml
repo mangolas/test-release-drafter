@@ -5,7 +5,7 @@ name: Release Drafter
 on:
   push:
     branches:
-      - opa-7305-automate-more
+      - master
 
 jobs:
   update_release_draft:
