@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - master
+      - dev
+      - test-on-branch
 
 jobs:
   update_release_draft:
