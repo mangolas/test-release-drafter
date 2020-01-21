@@ -1,9 +1,24 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+version-template: $MAJOR.$MINOR
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
-  # Titlesss
+  ## Changes
 
   $CHANGES
-branches:
-  - dev
-  - test-on-branch
-  - master
-
+replacers:
+  - search: '/((OPA|PAR)-\d+):?/g'
+    replace: '[$1](https://postinext.atlassian.net/browse/$1)'
+categories:
+  - title: 'Features'
+    labels:
+      - 'feat'
+  - title: 'Fixes'
+    labels:
+      - 'fix'
+  - title: 'Internal'
+    labels:
+      - 'chore'
+      - 'internal'
+exclude-labels:
+  - 'skip-changelog'
