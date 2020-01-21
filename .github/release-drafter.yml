@@ -1,5 +1,5 @@
-name-template: 'v$NEXT_PATCH_VERSION'
-tag-template: 'v$NEXT_PATCH_VERSION'
+name-template: 'v$NEXT_MINOR_VERSION'
+tag-template: 'v$NEXT_MINOR_VERSION'
 version-template: $MAJOR.$MINOR
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
@@ -13,9 +13,11 @@ categories:
   - title: 'Features'
     labels:
       - 'feat'
+      - 'feature'
   - title: 'Fixes'
     labels:
       - 'fix'
+      - 'bug'
   - title: 'Internal'
     labels:
       - 'chore'
