@@ -27,5 +27,7 @@ jobs:
           tar xzf /tmp/hub.tgz -C /tmp
           mv /tmp/hub-*/bin/hub /opt/hub/hub
       - name: Create pull request if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           /opt/hub/hub pr list -f '%I' -h next-release-candidate
