@@ -28,4 +28,4 @@ jobs:
           mv /tmp/hub-*/bin/hub /opt/hub/hub
       - name: Create pull request if needed
         run: |
-          hub pr list -f '%I' -h next-release-candidate
+          /opt/hub/hub pr list -f '%I' -h next-release-candidate
