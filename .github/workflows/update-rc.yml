@@ -14,3 +14,12 @@ jobs:
           git checkout -b next-release-candidate
           git fetch origin next-release-candidate || echo "No remote branch yet."
           git push --set-upstream origin next-release-candidate --force-with-lease
+      - uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: next-release-candidate
+          title: 'Next release candidate'
+          body: |
+            Automatically generated pull request from all the changes in dev.
+
+            Merging this will cause new release candidate deploy.
