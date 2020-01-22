@@ -14,7 +14,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: /opt/bin
-          key: hub-2.1.4
+          key: opt-bin-hub-2.1.4
       - name: Install hub
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
