@@ -1,6 +1,4 @@
-
-
-name: Release Drafter
+name: Update draft changelog on every dev PR
 
 on:
   push:
