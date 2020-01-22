@@ -31,11 +31,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::add-path::/opt/bin"
-          pr_num=$(hub pr list -f '%I' -h next-release-candidate)
+          pr_num=$(/opt/bin/hub pr list -f '%I' -h next-release-candidate)
           if [[ -z $pr_num ]]; then
             echo "No existing pull request, creating new ..."
-            hub pull-request \
+            /opt/bin/hub pull-request \
               -b rc \
               -m "Next release candidate" \
               -m "This is automatically created pull request from pushes to dev." \
