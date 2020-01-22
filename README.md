@@ -5,3 +5,5 @@ The change
 The bug fix
 
 This is a feature 3.
+
+This is a feature 4.
