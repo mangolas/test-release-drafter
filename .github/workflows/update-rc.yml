@@ -14,12 +14,18 @@ jobs:
           git checkout -b next-release-candidate
           git fetch origin next-release-candidate || echo "No remote branch yet."
           git push --set-upstream origin next-release-candidate --force-with-lease
-      - uses: peter-evans/create-pull-request@v2
+      - id: cache
+        uses: actions/cache@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: next-release-candidate
-          title: 'Next release candidate'
-          body: |
-            Automatically generated pull request from all the changes in dev.
-
-            Merging this will cause new release candidate deploy.
+          path: /opt/hub
+          key: hub-2.1.4
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /opt/hub
+          curl -L https://github.com/github/hub/releases/download/v2.14.0/hub-linux-amd64-2.14.0.tgz -o /tmp/hub.tgz
+          tar xzf /tmp/hub.tgz -C /tmp
+          mv /tmp/hub-*/bin/hub /opt/hub/hub
+      - name: Create pull request if needed
+        run: |
+          hub pr list -f '%I' -h next-release-candidate
