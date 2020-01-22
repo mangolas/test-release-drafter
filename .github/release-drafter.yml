@@ -1,4 +1,4 @@
-name-template: 'v$NEXT_MINOR_VERSION'
+name-template: 'v$NEXT_MINOR_VERSION-rc'
 tag-template: 'v$NEXT_MINOR_VERSION-rc'
 version-template: $MAJOR.$MINOR
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
