@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Installs 'hub' to /opt/bin/hub
+
+VERSION=2.14.0
+
+mkdir -p /opt/bin
+curl -L https://github.com/github/hub/releases/download/v${VERSION}/hub-linux-amd64-${VERSION}.tgz -o /tmp/hub.tgz
+tar xzf /tmp/hub.tgz -C /tmp
+mv /tmp/hub-*/bin/hub /opt/bin/hub

@@ -9,6 +9,7 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
+      # TODO This is really slow, install and use from repo directly
       - uses: release-drafter/release-drafter@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

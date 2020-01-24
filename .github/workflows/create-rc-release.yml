@@ -1,0 +1,27 @@
+name: Keep release candidate up to date on pushes to rc
+
+on:
+  push:
+    branches:
+      - rc
+
+jobs:
+  update_release_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: cache
+        uses: actions/cache@v1
+        with:
+          path: /opt/bin
+          key: opt-bin-hub-1
+
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/steps/install-hub
+
+      - name: Update release candidate Github release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: PATH="$PATH:/opt/bin" .github/steps/update-release-candidate
