@@ -21,8 +21,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/steps/install-hub
 
+      - run: echo "::add-path::/opt/bin"
+
       - name: Update release candidate Github release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATH: ${{ env.PATH }}:/opt/bin
         run: .github/scripts/release-tools dev-to-rc

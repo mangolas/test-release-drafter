@@ -21,8 +21,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/steps/install-hub
 
+      - run: echo "::add-path::/opt/bin"
+
       - name: Create pull request rc <- dev if needed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATH: ${{ env.PATH }}:/opt/bin
         run: .github/scripts/pr-tools dev_to_rc
