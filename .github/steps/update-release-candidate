@@ -15,7 +15,7 @@ releases=$(
 
 # These are not real tags yet as draft release tags do not exist yet
 
-latest_dev_tag=$(
+latest_dev_id=$(
   echo "$releases" |
   jq -s -r '
     map(select(.type=="draft") | select(.tag | endswith("-dev"))) |
@@ -23,7 +23,7 @@ latest_dev_tag=$(
   '
 )
 
-latest_rc_tag=$(
+latest_rc_id=$(
   echo "$releases" |
   jq -s -r '
     map(select(.type=="draft") | select(.tag | endswith("-rc"))) |
@@ -31,26 +31,27 @@ latest_rc_tag=$(
   '
 )
 
-echo "Latest dev tag: $latest_dev_tag"
-echo "Latest rc tag: $latest_rc_tag"
+promote_dev_to_rc() {
+  new_rc_id=${latest_dev_id//-dev/-rc}
+  echo "Promote $latest_dev_id to new draft release $new_rc_id"
+  changelog=$(hub release show -f '%b' $latest_dev_id)
+  hub release create -d -m "$new_rc_id" -m "$changelog" "$new_rc_id"
+  echo "Deleting the dev draft release $latest_dev_id"
+  hub release delete "$latest_dev_id"
+}
 
-if [[ -z $latest_dev_tag && -z $latest_rc_tag ]]; then
+update_rc() {
+  echo "Current pre-release found. Doing nothig."
+  # TODO When we know that we should append dev release stuff to ongoing rc?
+}
+
+echo "Latest dev release id: $latest_dev_id"
+echo "Latest rc release id: $latest_rc_id"
+
+if [[ -z $latest_dev_id && -z $latest_rc_id ]]; then
   echo "Could not find either dev or rc Github release! Can't do anything sane."
-elif [[ -z $latest_rc_tag ]]; then
+elif [[ -z $latest_rc_id ]]; then
   promote_dev_to_rc
 else
   update_rc
 fi
-
-promote_dev_to_rc() {
-  echo "Promote $latest_dev_tag to new release candidate ${latest_dev_tag//-dev/-rc}"
-  changelog=$(hub release show -f '%b' $latest_dev_tag)
-  hub release create -d -m "${latest_dev_tag//-dev/-rc}" -m "$changelog" "${latest_dev_tag//-dev/-rc}"
-  echo "Deleting the dev release $latest_dev_tag"
-  hub release delete "$latest_dev_tag"
-}
-
-update_rc() {
-  echo "Current pre-release found."
-  # TODO When we know that we should append dev release stuff to ongoing rc?
-}
