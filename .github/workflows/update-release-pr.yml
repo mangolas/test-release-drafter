@@ -1,9 +1,9 @@
-name: Update current release candidate PR from dev
+name: Update current release PR from rc
 
 on:
   push:
     branches:
-      - dev
+      - rc
 
 jobs:
   update_release_draft:
@@ -21,8 +21,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/steps/install-hub
 
-      - name: Create pull request rc <- dev if needed
+      - name: Create pull request master <- rc if needed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PATH: ${{ env.PATH }}:/opt/bin
-        run: .github/scripts/pr-tools dev_to_rc
+        run: .github/scripts/pr-tools rc_to_master

@@ -24,4 +24,5 @@ jobs:
       - name: Update release candidate Github release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: PATH="$PATH:/opt/bin" .github/steps/update-release-candidate
+          PATH: ${{ env.PATH }}:/opt/bin
+        run: .github/scripts/release-tools dev-to-rc
