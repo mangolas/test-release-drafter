@@ -6,25 +6,51 @@ set -eo pipefail
 
 # Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
 # creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
-# draft release and one/zero pre-release on the fly.
-#
-# We'll see if the heuristics for picking right next draft release is good enough. If it's not working, it
-# should be quite visible that release logic is not working properly.
+# draft release and one/zero pre-release on the fly in the top hits.
 
 releases=$(
   hub release --include-drafts -L 20 \
     -f '{"tag": "%T", "type":"%S", "created":"%ct"}%n'
 )
 
-latest_draft_tag=$(
+# These are not real tags yet as draft release tags do not exist yet
+
+latest_dev_tag=$(
   echo "$releases" |
-  jq -s -r 'map(select(.type=="draft")) | sort_by(.created) | first | .tag // empty'
+  jq -s -r '
+    map(select(.type=="draft") | select(.tag | endswith("-dev"))) |
+    sort_by(.created) | reverse | first | .tag // empty
+  '
 )
 
-latest_prerelease_tag=$(
+latest_rc_tag=$(
   echo "$releases" |
-  jq -s -r 'map(select(.type=="pre-release")) | sort_by(.created) | first | .tag // empty'
+  jq -s -r '
+    map(select(.type=="draft") | select(.tag | endswith("-rc"))) |
+    sort_by(.created) | reverse | first | .tag // empty
+  '
 )
 
-echo "Latest draft: $latest_draft_tag"
-echo "Latest pre-release: $latest_prerelease_tag"
+echo "Latest dev tag: $latest_dev_tag"
+echo "Latest rc tag: $latest_rc_tag"
+
+if [[ -z $latest_dev_tag && -z $latest_rc_tag ]]; then
+  echo "Could not find either dev or rc Github release! Can't do anything sane."
+elif [[ -z $latest_rc_tag ]]; then
+  promote_dev_to_rc
+else
+  update_rc
+fi
+
+promote_dev_to_rc() {
+  echo "Promote $latest_dev_tag to new release candidate ${latest_dev_tag//-dev/-rc}"
+  changelog=$(hub release show -f '%b' $latest_dev_tag)
+  hub release create -d -m "${latest_dev_tag//-dev/-rc}" -m "$changelog" "${latest_dev_tag//-dev/-rc}"
+  echo "Deleting the dev release $latest_dev_tag"
+  hub release delete "$latest_dev_tag"
+}
+
+update_rc() {
+  echo "Current pre-release found."
+  # TODO When we know that we should append dev release stuff to ongoing rc?
+}
