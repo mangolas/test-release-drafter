@@ -26,4 +26,4 @@ jobs:
       - name: Release a new version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .github/scripts/release-tools rc_to_master
+        run: .github/scripts/release-tools release_new_version
