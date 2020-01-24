@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
+set -x
 # Tries to keep dev and rc draft release information in order
 #
 
