@@ -32,11 +32,25 @@ latest_rc_id=$(
 )
 
 promote_dev_to_rc() {
-  new_rc_id=${latest_dev_id//-dev/-rc}
-  echo "Promote $latest_dev_id to new draft release $new_rc_id"
+  if [[ $latest_dev_id =~ (v[0-9]*\.)([0-9]*) ]]; then
+    new_minor=$((${BASH_REMATCH[2]} + 1))
+    new_dev_id="${BASH_REMATCH[1]}${new_minor}-dev"
+  else
+    echo "ERROR: Release tag '$latest_dev_id' is not following form 'v<major num>.<minor num>"
+    exit 1
+  fi
+
+  echo "Promote '$latest_dev_id' to new draft release '$new_rc_id'"
   changelog=$(hub release show -f '%b' $latest_dev_id)
+
+  new_rc_id=${latest_dev_id//-dev/-rc}
+  echo "Creating new draft release '$new_rc_id' ..."
   hub release create -d -m "$new_rc_id" -m "$changelog" "$new_rc_id"
-  echo "Deleting the dev draft release $latest_dev_id"
+
+  echo "Creating new draft release '$new_dev_id' ..."
+  hub release create -d -m "$new_dev_id" "$new_dev_id"
+
+  echo "Deleting the previous dev draft release '$latest_dev_id' ..."
   hub release delete "$latest_dev_id"
 }
 
