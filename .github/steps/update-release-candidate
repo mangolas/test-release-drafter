@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Tries to keep next release candidate release information up to date
+
+# Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
+# creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
+# draft release and one/zero pre-release on the fly.
+#
+# We'll see if the heuristics for picking right next draft release is good enough. If it's not working, it
+# should be quite visible that release logic is not working properly.
+
+releases=$(
+  hub release --include-drafts -L 20 \
+    -f '{"tag": "%T", "type":"%S", "created":"%ct"}%n'
+)
+
+latest_draft_tag=$(
+  echo "$releases" |
+  jq -s -r 'map(select(.type=="draft")) | sort_by(.created) | first | .tag // empty'
+)
+
+latest_prerelease_tag=$(
+  echo "$releases" |
+  jq -s -r 'map(select(.type=="pre-release")) | sort_by(.created) | first | .tag // empty'
+)
+
+echo "Latest draft: $latest_draft_tag"
+echo "Latest pre-release: $latest_prerelease_tag"
