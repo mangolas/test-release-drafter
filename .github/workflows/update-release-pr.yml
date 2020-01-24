@@ -22,7 +22,7 @@ jobs:
         run: .github/steps/install-hub
 
       - run: echo "::add-path::/opt/bin"
-        -
+
       - name: Create pull request master <- rc if needed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
