@@ -31,6 +31,19 @@ latest_rc_tag=$(
   '
 )
 
+promote_dev_to_rc() {
+  echo "Promote $latest_dev_tag to new release candidate ${latest_dev_tag//-dev/-rc}"
+  changelog=$(hub release show -f '%b' $latest_dev_tag)
+  echo hub release create -d -m "${latest_dev_tag//-dev/-rc}" -m "$changelog" "${latest_dev_tag//-dev/-rc}"
+  echo "Deleting the dev release $latest_dev_tag"
+  echo hub release delete "$latest_dev_tag"
+}
+
+update_rc() {
+  echo "Current pre-release found."
+  # TODO When we know that we should append dev release stuff to ongoing rc?
+}
+
 echo "Latest dev tag: $latest_dev_tag"
 echo "Latest rc tag: $latest_rc_tag"
 
@@ -41,16 +54,3 @@ elif [[ -z $latest_rc_tag ]]; then
 else
   update_rc
 fi
-
-promote_dev_to_rc() {
-  echo "Promote $latest_dev_tag to new release candidate ${latest_dev_tag//-dev/-rc}"
-  changelog=$(hub release show -f '%b' $latest_dev_tag)
-  hub release create -d -m "${latest_dev_tag//-dev/-rc}" -m "$changelog" "${latest_dev_tag//-dev/-rc}"
-  echo "Deleting the dev release $latest_dev_tag"
-  hub release delete "$latest_dev_tag"
-}
-
-update_rc() {
-  echo "Current pre-release found."
-  # TODO When we know that we should append dev release stuff to ongoing rc?
-}
