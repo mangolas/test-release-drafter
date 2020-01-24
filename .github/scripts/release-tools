@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Tries to keep dev and rc draft release information in order
+
+# Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
+# creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
+# draft release and one/zero pre-release on the fly in the top hits.
+
+releases=$(
+  hub release --include-drafts -L 20 \
+    -f '{"tag": "%T", "type":"%S", "created":"%ct"}%n'
+)
+
+latest_dev_tag=$(
+  echo "$releases" |
+  jq -s -r '
+    map(select(.type=="draft")) |
+    sort_by(.created) | reverse | first | .tag // empty
+  '
+)
+
+latest_rc_tag=$(
+  echo "$releases" |
+  jq -s -r '
+    map(select(.type=="pre-release")) |
+    sort_by(.created) | reverse | first | .tag // empty
+  '
+)
+
+echo "Found dev release tag: $latest_dev_tag"
+echo "Found rc release tag: $latest_rc_tag"
+
+_promote_dev_to_rc() {
+  echo "Promote draft '$latest_dev_tag' to release candidate ..."
+  changelog=$(hub release show -f '%b' $latest_dev_tag)
+
+  hub release edit --draft=false --prerelease \
+    -m "$latest_dev_tag (rc)" -m "$changelog" "$latest_dev_tag"
+}
+
+_promote_rc_to_release() {
+  echo "Creating a release '$latest_rc_tag' ..."
+  changelog=$(hub release show -f '%b' $latest_rc_tag)
+
+  hub release edit -m "$latest_dev_tag" -m "$changelog" "$latest_rc_tag"
+}
+
+_update_rc() {
+  echo "Current pre-release found. Changing tag '$latest_rc_tag' to rc HEAD ..."
+  git tag -f "$latest_rc_tag"
+  git push -f origin "$latest_rc_tag"
+}
+
+update_rc_change() {
+  if [[ -z $latest_dev_tag && -z $latest_rc_tag ]]; then
+    echo "Could not find either dev or rc Github release! Can't do anything sane."
+  elif [[ -z $latest_rc_tag ]]; then
+    _promote_dev_to_rc
+  else
+    _update_rc
+  fi
+}
+
+release_new_version() {
+  if [[ -z $latest_rc_tag ]]; then
+    echo "ERROR: Could not find rc Github release! Can't proceed with release!"
+    exit 1
+  else
+    _promote_rc_to_release
+  fi
+}
+
+"$@"

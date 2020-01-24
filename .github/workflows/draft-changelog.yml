@@ -1,18 +1,15 @@
-
-
-name: Release Drafter
+name: Update draft changelog on every dev PR
 
 on:
   push:
     branches:
-      - master
       - dev
-      - test-on-branch
 
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
+      # TODO This is really slow, install and use from repo directly with proper cache
       - uses: release-drafter/release-drafter@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

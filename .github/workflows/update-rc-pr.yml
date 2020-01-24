@@ -1,0 +1,29 @@
+name: Update current release candidate PR from dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  update_release_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: cache
+        uses: actions/cache@v1
+        with:
+          path: /opt/bin
+          key: opt-bin-hub-1
+
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/steps/install-hub
+
+      - run: echo "::add-path::/opt/bin"
+
+      - name: Create pull request rc <- dev if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/pr-tools dev_to_rc

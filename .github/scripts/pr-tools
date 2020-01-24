@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Create a pull request if needed
+
+_create_pr() {
+  local from=$1
+  local into=$2
+  local title=$3
+  local msg=$4
+  local label=$5
+
+  pr_num=$(hub pr list -f '%I' -h "$from")
+  if [[ -z $pr_num ]]; then
+    echo "No existing pull request, creating new ..."
+    hub pull-request -b "$into" -m "$title" -m "$msg" -l skip-changelog -l "$label"
+  else
+    echo "Pull request exists, nothing to do ..."
+  fi
+}
+
+dev_to_rc() {
+  title="Next release candidate"
+  msg='This is automatically created pull request from pushes to dev-branch.
+
+Merge this pull request to trigger release candidate process.'
+  _create_pr dev rc "$title" "$msg" release-candidate
+}
+
+rc_to_master() {
+  title="Next release"
+  msg='This is automatically created pull request from pushes to rc-branch.
+
+Merge this pull request to trigger release process.'
+  _create_pr rc master "$title" "$msg" release
+}
+
+"$@"
