@@ -40,7 +40,7 @@ promote_dev_to_rc() {
 update_rc() {
   echo "Current pre-release found. Changing tag '$latest_rc_tag' to rc HEAD ..."
   git tag -f "$latest_rc_tag"
-  git tag push -f origin "$latest_rc_tag"
+  git push -f origin "$latest_rc_tag"
 }
 
 echo "Latest dev release tag: $latest_dev_tag"
