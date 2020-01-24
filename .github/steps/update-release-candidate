@@ -3,7 +3,6 @@
 set -eo pipefail
 
 # Tries to keep dev and rc draft release information in order
-#
 
 # Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
 # creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
