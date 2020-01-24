@@ -21,27 +21,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/steps/install-hub
 
-# XXX(lassi): Is it ok just to pr directly from dev?
-#      - name: Push changes to 'next-release-candidate' branch
-#        run: |
-#          git checkout -b next-release-candidate
-#          git fetch origin next-release-candidate || echo "No remote branch yet."
-#          git push --set-upstream origin next-release-candidate --force-with-lease
+      - run: echo "::add-path::/opt/bin"
 
       - name: Create pull request rc <- dev if needed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pr_num=$(/opt/bin/hub pr list -f '%I' -h dev)
-          if [[ -z $pr_num ]]; then
-            echo "No existing pull request, creating new ..."
-            /opt/bin/hub pull-request \
-              -b rc \
-              -m "Next release candidate" \
-              -m "This is automatically created pull request from pushes to dev." \
-              -m "Merge this branch to trigger next release candidate deploy." \
-              -l skip-changelog \
-              -l release-candidate
-          else
-            echo "Pull request exists, nothing to do ..."
-          fi
+        run: .github/scripts/pr-tools dev_to_rc
