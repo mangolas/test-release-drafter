@@ -2,7 +2,6 @@
 
 set -eo pipefail
 
-set -x
 # Tries to keep dev and rc draft release information in order
 #
 
@@ -36,7 +35,7 @@ promote_dev_to_rc() {
   changelog=$(hub release show -f '%b' $latest_dev_tag)
 
   hub release edit --draft=false --prerelease \
-    -m "$latest_dev_tag (rc)" -m "$changelog" "$latest_dev_tag}"
+    -m "$latest_dev_tag (rc)" -m "$changelog" "$latest_dev_tag"
 }
 
 # A two drafts version, which won't work
