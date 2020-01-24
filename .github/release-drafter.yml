@@ -1,5 +1,5 @@
-name-template: 'v$NEXT_MINOR_VERSION-rc'
-tag-template: 'v$NEXT_MINOR_VERSION-rc'
+name-template: 'v$NEXT_MINOR_VERSION-dev'
+tag-template: 'v$NEXT_MINOR_VERSION-dev'
 version-template: $MAJOR.$MINOR
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
