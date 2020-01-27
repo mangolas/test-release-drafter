@@ -9,7 +9,11 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
-      # TODO This is really slow, install and use from repo directly with proper cache
-      - uses: release-drafter/release-drafter@v5
+#      # TODO This is really slow
+#      - uses: release-drafter/release-drafter@v5
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Using a branch which has dockerless variant
+      - uses: casz/release-drafter@chore/probot-adapter
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
