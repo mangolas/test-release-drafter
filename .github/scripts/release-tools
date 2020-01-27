@@ -11,7 +11,7 @@ _promote_draft_to_prerelease() {
   echo "Promote draft '$LATEST_DRAFT_TAG' to release candidate ..."
   changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
-  hub release edit --draft=false --prerelease \
+  hub release edit --draft=false --prerelease=true \
     -m "$LATEST_DRAFT_TAG (rc)" -m "$changelog" "$LATEST_DRAFT_TAG"
 }
 
