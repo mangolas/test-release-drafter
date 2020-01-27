@@ -52,7 +52,7 @@ _is_last_change_from_dev() {
   # This could also be out of sync if dev changes are pushed while this is running,
   # but that should be rare. And in worst case changelog is missing something
   # that has to be manually added later.
-  git --no-pager log -n 1 | \
+  git log -n 1 | \
   grep -C 20 "Merge pull request" | \
   grep -C 20 "/dev" | \
   grep "$version"
