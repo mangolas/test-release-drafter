@@ -8,18 +8,19 @@ source .github/scripts/tag-search
 fetch_latest_tag_names
 
 _promote_draft_to_prerelease() {
-  echo "Promote draft '$LATEST_LATEST_DRAF_TAG' to release candidate ..."
-  changelog=$(hub release show -f '%b' $LATEST_LATEST_DRAF_TAG)
+  echo "Promote draft '$LATEST_DRAF_TAG' to release candidate ..."
+  changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
   hub release edit --draft=false --prerelease \
-    -m "$LATEST_LATEST_DRAF_TAG (rc)" -m "$changelog" "$LATEST_LATEST_DRAF_TAG"
+    -m "$LATEST_DRAFT_TAG (rc)" -m "$changelog" "$LATEST_DRAFT_TAG"
 }
 
 _promote_prerelease_to_release() {
   echo "Creating a release '$LATEST_PREREL_TAG' ..."
   changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
 
-  hub release edit -m "$LATEST_LATEST_DRAF_TAG" -m "$changelog" "$LATEST_PREREL_TAG"
+  hub release edit --prerelease=false \
+    -m "$LATEST_PREREL_TAG" -m "$changelog" "$LATEST_PREREL_TAG"
 }
 
 _update_pre_release_tag() {
@@ -29,7 +30,7 @@ _update_pre_release_tag() {
 }
 
 update_prerelease() {
-  if [[ -z $LATEST_LATEST_DRAF_TAG && -z $LATEST_PREREL_TAG ]]; then
+  if [[ -z $LATEST_DRAFT_TAG && -z $LATEST_PREREL_TAG ]]; then
     echo "Could not find either dev or rc Github release! Can't do anything sane."
   elif [[ -z $LATEST_PREREL_TAG ]]; then
     _promote_draft_to_prerelease
