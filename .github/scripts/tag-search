@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Helper to find relevant tags from Github releases
+
+# Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
+# creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
+# draft release and one/zero pre-release on the fly in the top hits.
+
+fetch_releases() {
+  hub release --include-drafts -L 20 \
+    -f '{"tag": "%T", "type":"%S", "created":"%ct"}%n'
+}
+
+find_release_by_type() {
+  local type=$1
+  local releases=$2
+  echo "$releases" |
+  jq -s -r '
+    map(select(.type=="'"$type"'")) |
+    sort_by(.created) | reverse | first | .tag // empty
+  '
+}
+
+get_latest_draft_and_prerelease() {
+  local releases
+  releases=$(fetch_releases)
+  LATEST_DRAFT_TAG=$(find_release_by_type 'draft' "$releases")
+  LATEST_PREREL_TAG=$(find_release_by_type 'pre-release' "$releases")
+  echo "Latest draft release tag: $LATEST_DRAFT_TAG"
+  echo "Latest prerelease tag: $LATEST_PREREL_TAG"
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+  "$@"
+fi
