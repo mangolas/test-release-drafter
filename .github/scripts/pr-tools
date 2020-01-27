@@ -4,36 +4,47 @@ set -eo pipefail
 
 # Create a pull request if needed
 
-_create_pr() {
+source .github/scripts/tag-search
+fetch_latest_tag_names
+
+_create_or_update_pr() {
   local from=$1
   local into=$2
   local title=$3
   local msg=$4
   local label=$5
 
+  local pr_num
   pr_num=$(hub pr list -f '%I' -h "$from")
   if [[ -z $pr_num ]]; then
     echo "No existing pull request, creating new ..."
     hub pull-request -b "$into" -m "$title" -m "$msg" -l skip-changelog -l "$label"
   else
-    echo "Pull request exists, nothing to do ..."
+    echo "Pull request exists, updating title and body only ..."
+    # Hub does not have simple command for updating pr yet
+    hub api \
+      -XPATCH \
+      -H 'accept: application/vnd.github.shadow-cat-preview+json' \
+      "repos/{owner}/{repo}/pulls/$pr_num" \
+      -F "title=$title" \
+      -F "body=$msg" > /dev/null
   fi
 }
 
 dev_to_rc() {
-  title="Next release candidate"
+  title="Next release candidate $LATEST_DRAFT_TAG"
   msg='This is automatically created pull request from pushes to dev-branch.
 
 Merge this pull request to trigger release candidate process.'
-  _create_pr dev rc "$title" "$msg" release-candidate
+  _create_or_update_pr dev rc "$title" "$msg" release-candidate
 }
 
 rc_to_master() {
-  title="Next release"
+  title="Next release $LATEST_PREREL_TAG"
   msg='This is automatically created pull request from pushes to rc-branch.
 
 Merge this pull request to trigger release process.'
-  _create_pr rc master "$title" "$msg" release
+  _create_or_update_pr rc master "$title" "$msg" release
 }
 
 "$@"

@@ -4,7 +4,7 @@ set -eo pipefail
 
 # Installs 'hub' to /opt/bin/hub
 
-VERSION=2.14.0
+VERSION=2.14.1
 
 mkdir -p /opt/bin
 curl -L https://github.com/github/hub/releases/download/v${VERSION}/hub-linux-amd64-${VERSION}.tgz -o /tmp/hub.tgz
