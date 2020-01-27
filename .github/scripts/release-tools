@@ -15,6 +15,21 @@ _promote_draft_to_prerelease() {
     -m "$LATEST_DRAFT_TAG (rc)" -m "$changelog" "$LATEST_DRAFT_TAG"
 }
 
+_merge_draft_to_prerelease() {
+  echo "Merge draft '$LATEST_DRAFT_TAG' to '$LATEST_PREREL_TAG' ..."
+  draft_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
+  prerel_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+
+  hub release edit --draft=false --prerelease=true \
+    -m "$LATEST_PREREL_TAG (rc)" \
+    -m "$prerel_changelog" \
+    -m "[Changelog from draft '$LATEST_DRAFT_TAG', merge manually to above]" \
+    -m "$draft_changelog" \
+    "$LATEST_PREREL_TAG"
+  echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
+  hub release delete "$LATEST_DRAFT_TAG"
+}
+
 _promote_prerelease_to_release() {
   echo "Creating a release '$LATEST_PREREL_TAG' ..."
   changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
@@ -29,14 +44,32 @@ _update_pre_release_tag() {
   git push -f origin "$LATEST_PREREL_TAG"
 }
 
+_is_last_change_from_dev() {
+  local version=$1
+  # XXX(lassi) I'm sure there can be better ways to detect when dev is merged
+  # to rc in a way that draft release contents should/can be moved to prerelease.
+  #
+  # This could also be out of sync if dev changes are pushed while this is running,
+  # but that should be rare. And in worst case changelog is missing something
+  # that has to be manually added later.
+  git --no-pager log -n 1 | \
+  grep -C 20 "Merge pull request" | \
+  grep -C 20 "/dev" | \
+  grep "$version"
+}
+
 update_prerelease() {
   if [[ -z $LATEST_DRAFT_TAG && -z $LATEST_PREREL_TAG ]]; then
     echo "Could not find either dev or rc Github release! Can't do anything sane."
   elif [[ -z $LATEST_PREREL_TAG ]]; then
     _promote_draft_to_prerelease
   else
-    # TODO Detect if this is dev branch merge to rc and in that case copy
-    # draft release body text to the end of the pre-release body
+    if _is_last_change_from_dev "$LATEST_DRAFT_TAG"; then
+      _merge_draft_to_prerelease
+    else
+      echo "Last push to rc did not originate from dev!"
+      echo "Changelog will not reflect changes automatically!"
+    fi
     _update_pre_release_tag
   fi
 }
