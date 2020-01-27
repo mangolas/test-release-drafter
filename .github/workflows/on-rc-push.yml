@@ -1,4 +1,4 @@
-name: On 'rc' branch push
+name: On rc push
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: On 'master' branch push
+name: On master push
 
 on:
   push:

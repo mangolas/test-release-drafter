@@ -1,4 +1,4 @@
-name: On 'dev' branch push
+name: On dev push
 
 on:
   push:
