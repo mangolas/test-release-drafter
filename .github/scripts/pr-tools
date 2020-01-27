@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-# Create a pull request if needed
+# Manipulate pull requests
 
 source .github/scripts/tag-search
 fetch_latest_tag_names
@@ -45,6 +45,12 @@ rc_to_master() {
 
 Merge this pull request to trigger release process.'
   _create_or_update_pr rc master "$title" "$msg" release
+}
+
+master_to_dev() {
+  title="Backmerge from master to dev"
+  msg='This is automatically created pull request from pushes to master-branch.'
+  _create_or_update_pr master dev "$title" "$msg" release
 }
 
 "$@"
