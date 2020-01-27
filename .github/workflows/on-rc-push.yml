@@ -6,22 +6,15 @@ on:
       - rc
 
 jobs:
-  install-hub:
-    runs-on: ubuntu-latest
-    steps:
-    - id: cache
-      uses: actions/cache@v1
-      with:
-        path: /opt/bin
-        key: opt-bin-hub-1
-    - name: Install hub
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: .github/steps/install-hub
-
   update_pre_release:
     runs-on: ubuntu-latest
-    needs: install-hub
     steps:
+      - id: cache
+        uses: actions/cache@v1
+        with: {path: /opt/bin, key: opt-bin-1}
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/steps/install-hub
       - uses: actions/checkout@v2
       - name: Update release candidate Github release
         env:
@@ -30,8 +23,13 @@ jobs:
 
   create_release_pr:
     runs-on: ubuntu-latest
-    needs: install-hub
     steps:
+      - id: cache
+        uses: actions/cache@v1
+        with: {path: /opt/bin, key: opt-bin-1}
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/steps/install-hub
       - uses: actions/checkout@v2
       - name: Create pull request from rc to master, if needed
         env:
