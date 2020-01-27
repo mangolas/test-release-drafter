@@ -6,7 +6,7 @@ on:
       - rc
 
 jobs:
-  update_pre_release:
+  update_prerelease:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -19,9 +19,9 @@ jobs:
       - name: Update release candidate Github release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .github/scripts/release-tools update_rc_change
+        run: .github/scripts/release-tools update_prerelease
 
-  create_release_pr:
+  create_release_pull_request:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
