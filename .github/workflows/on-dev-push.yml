@@ -1,0 +1,39 @@
+name: On dev push
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  update_draft_release_changelog:
+    runs-on: ubuntu-latest
+    steps:
+      ## This is really slow
+      #- uses: release-drafter/release-drafter@v5
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Using a branch which has dockerless variant, runs in a few seconds as above
+      # is over a minute. Change to official project when https://github.com/release-drafter/release-drafter/pull/376
+      # has been done.
+      - uses: casz/release-drafter@chore/probot-adapter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create_release_candidate_pull_request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v1
+        with: {path: /opt/bin, key: opt-bin-1}
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/scripts/install-hub
+      - run: echo "::add-path::/opt/bin"
+      - name: Create pull request from dev to rc, if needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/pr-tools dev_to_rc
+
