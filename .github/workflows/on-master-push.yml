@@ -21,3 +21,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/release-tools release_new_version
+
+  create_backmerge_pull_request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v1
+        with: {path: /opt/bin, key: opt-bin-1}
+      - name: Install hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/scripts/install-hub
+      - run: echo "::add-path::/opt/bin"
+      - name: Create backmerge pr from master to dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/pr-tools master_to_dev
