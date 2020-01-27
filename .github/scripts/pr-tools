@@ -32,7 +32,7 @@ _create_or_update_pr() {
 }
 
 dev_to_rc() {
-  title="Next release candidate $LATEST_DRAFT_TAG"
+  title="Release candidate $LATEST_DRAFT_TAG"
   msg='This is automatically created pull request from pushes to dev-branch.
 
 Merge this pull request to trigger release candidate process.'
@@ -40,7 +40,7 @@ Merge this pull request to trigger release candidate process.'
 }
 
 rc_to_master() {
-  title="Next release $LATEST_PREREL_TAG"
+  title="Release $LATEST_PREREL_TAG"
   msg='This is automatically created pull request from pushes to rc-branch.
 
 Merge this pull request to trigger release process.'
