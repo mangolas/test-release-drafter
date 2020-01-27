@@ -16,6 +16,7 @@ jobs:
       - name: Install hub
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-hub
+      - run: echo "::add-path::/opt/bin"
       - name: Release a new version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

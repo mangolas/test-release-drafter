@@ -16,6 +16,7 @@ jobs:
       - name: Install hub
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-hub
+      - run: echo "::add-path::/opt/bin"
       - name: Update release candidate Github release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,6 +32,7 @@ jobs:
       - name: Install hub
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-hub
+      - run: echo "::add-path::/opt/bin"
       - name: Create pull request from rc to master, if needed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
