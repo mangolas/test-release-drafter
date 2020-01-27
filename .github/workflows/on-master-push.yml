@@ -9,13 +9,13 @@ jobs:
   release_new_version:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
         with: {path: /opt/bin, key: opt-bin-1}
       - name: Install hub
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/steps/install-hub
-      - uses: actions/checkout@v2
       - name: Release a new version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
