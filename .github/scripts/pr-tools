@@ -5,6 +5,7 @@ set -eo pipefail
 # Create a pull request if needed
 
 source .github/scripts/tag-search
+fetch_latest_tag_names
 
 _create_or_update_pr() {
   local from=$1
@@ -26,7 +27,7 @@ _create_or_update_pr() {
       -H 'accept: application/vnd.github.shadow-cat-preview+json' \
       "repos/{owner}/{repo}/pulls/$pr_num" \
       -F "title=$title" \
-      -F "body=$msg"
+      -F "body=$msg" > /dev/null
   fi
 }
 

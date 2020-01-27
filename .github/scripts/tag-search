@@ -23,7 +23,7 @@ find_release_by_type() {
   '
 }
 
-get_latest_draft_and_prerelease() {
+fetch_latest_tag_names() {
   local releases
   releases=$(fetch_releases)
   LATEST_DRAFT_TAG=$(find_release_by_type 'draft' "$releases")

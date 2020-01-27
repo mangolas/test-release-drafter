@@ -5,6 +5,7 @@ set -eo pipefail
 # Tools for managing draft, prerelease and actual Github release data
 
 source .github/scripts/tag-search
+fetch_latest_tag_names
 
 _promote_draft_to_prerelease() {
   echo "Promote draft '$LATEST_LATEST_DRAF_TAG' to release candidate ..."
