@@ -8,7 +8,7 @@ source .github/scripts/tag-search
 fetch_latest_tag_names
 
 _promote_draft_to_prerelease() {
-  echo "Promote draft '$LATEST_DRAF_TAG' to release candidate ..."
+  echo "Promote draft '$LATEST_DRAFT_TAG' to release candidate ..."
   changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
   hub release edit --draft=false --prerelease \
