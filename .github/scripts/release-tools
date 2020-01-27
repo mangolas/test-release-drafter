@@ -20,14 +20,14 @@ _merge_draft_to_prerelease() {
   draft_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
   prerel_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
 
-  echo hub release edit --draft=false --prerelease=true \
+  hub release edit --draft=false --prerelease=true \
     -m "$LATEST_PREREL_TAG (rc)" \
     -m "$prerel_changelog" \
     -m "[Changelog from draft '$LATEST_DRAFT_TAG', merge manually to above]" \
     -m "$draft_changelog" \
     "$LATEST_PREREL_TAG"
   echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
-  echo hub release delete "$LATEST_DRAFT_TAG"
+  hub release delete "$LATEST_DRAFT_TAG"
 }
 
 _promote_prerelease_to_release() {
@@ -40,22 +40,22 @@ _promote_prerelease_to_release() {
 
 _update_pre_release_tag() {
   echo "Current pre-release found. Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
-  echo git tag -f "$LATEST_PREREL_TAG"
-  echo git push -f origin "$LATEST_PREREL_TAG"
+  git tag -f "$LATEST_PREREL_TAG"
+  git push -f origin "$LATEST_PREREL_TAG"
 }
 
 _is_last_change_from_dev() {
-  last_non_merge_commit=$(git --no-pager log --no-merges -n 1 --pretty=format:"%h")
-  #
-  # The logic is that if last non merge commit exists in dev, it most likely
-  # means that current dev has been merged (as this is run on rc branch).
-  #
+  local version=$1
   # XXX(lassi) I'm sure there can be better ways to detect when dev is merged
-  # to rc in a way that draft release contents should be moved to prerelease.
+  # to rc in a way that draft release contents should/can be moved to prerelease.
+  #
   # This could also be out of sync if dev changes are pushed while this is running,
   # but that should be rare. And in worst case changelog is missing something
   # that has to be manually added later.
-  git --no-pager branch -r --contains $last_non_merge_commit | grep 'origin/dev'
+  git --no-pager log -n 1 | \
+  grep -C 20 "Merge pull request" | \
+  grep -C 20 "/dev" | \
+  grep "$version"
 }
 
 update_prerelease() {
@@ -64,7 +64,7 @@ update_prerelease() {
   elif [[ -z $LATEST_PREREL_TAG ]]; then
     _promote_draft_to_prerelease
   else
-    if _is_last_change_from_dev; then
+    if _is_last_change_from_dev "$LATEST_DRAFT_TAG"; then
       _merge_draft_to_prerelease
     else
       echo "Last push to rc did not originate from dev!"
