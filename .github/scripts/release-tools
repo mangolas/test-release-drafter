@@ -9,10 +9,10 @@ fetch_latest_tag_names
 
 _promote_draft_to_prerelease() {
   echo "Promote draft '$LATEST_DRAFT_TAG' to release candidate ..."
-  changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
+  old_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
   hub release edit --draft=false --prerelease=true \
-    -m "$LATEST_DRAFT_TAG (rc)" -m "$changelog" "$LATEST_DRAFT_TAG"
+    -m "$LATEST_DRAFT_TAG (rc)" -m "$old_changelog" "$LATEST_DRAFT_TAG"
 }
 
 _merge_draft_to_prerelease() {
@@ -25,36 +25,55 @@ _merge_draft_to_prerelease() {
     $'\n'
     "$draft_changelog"
   )
-  _update_prerelease_tag "${changelog_addition[*]}"
+  # XXX(lassi) We have to create new prerelease on dev merge, as the release's
+  # *published_at* is only set when release is created. And 'release-drafter'
+  # Github action is using that time stamp to check what is changed in dev until
+  # that time. So we must be extra careful that dev pr changes are not lost in
+  # regard automatic old_changelog manipulation. It would be better if changes would
+  # just be calculated between last_release_tag..dev, but unfortunately
+  # that is not the case.
+  _change_prerelease create "${changelog_addition[*]}"
   echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
   hub release delete "$LATEST_DRAFT_TAG"
 }
 
-_update_prerelease_tag() {
-  local additional_msg=${1:-}
-  local release_tag=${LATEST_PREREL_TAG/-rc*/}
-  local rc_num=${LATEST_PREREL_TAG/*-rc-/}
-  if [[ -z $rc_num ]]; then
-    echo "ERROR: Could not extract release candidate count from tag '$LATEST_PREREL_TAG'!"
-    exit 1
-  fi
-  local prerelease_tag="${release_tag}-rc-$(($rc_num + 1))"
-  echo "Creating new prerelease from '$LATEST_PREREL_TAG' to '$prerelease_tag' ..."
-  changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+  echo "Current pre-release found. Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
+  git tag -f "$LATEST_PREREL_TAG"
+  git push -f origin "$LATEST_PREREL_TAG"
 
-  hub release create --prerelease=true \
-    -m "$prerelease_tag (rc)" -m "$changelog" -m "$additional_msg" \
-    "$prerelease_tag"
-  echo "Deleting previous prerelease '$LATEST_PREREL_TAG' ..."
-  hub release delete "$LATEST_PREREL_TAG"
+_change_prerelease() {
+  # 'create' or 'edit'
+  local change_method=$1
+  local additional_msg=${2:-}
+
+  echo "Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
+  git tag -f "$LATEST_PREREL_TAG"
+  git push -f origin "$LATEST_PREREL_TAG"
+
+  old_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+  if [[ $change_method == 'create' ]]; then
+
+    echo "Deleting previous prerelease '$LATEST_PREREL_TAG' ..."
+    hub release delete "$LATEST_PREREL_TAG"
+
+    echo "Creating updated prerelease '$LATEST_PREREL_TAG' ..."
+    hub release create --prerelease=true \
+      -m "$LATEST_PREREL_TAG (rc)" -m "$old_changelog" -m "$additional_msg" \
+      "$LATEST_PREREL_TAG"
+  else
+    echo "Editing prerelease '$LATEST_PREREL_TAG' ..."
+    hub release edit --prerelease=true \
+      -m "$LATEST_PREREL_TAG (rc)" -m "$old_changelog" -m "$additional_msg" \
+      "$LATEST_PREREL_TAG"
+  fi
 }
 
 _promote_prerelease_to_release() {
   local release_tag=${LATEST_PREREL_TAG/-rc*/}
   echo "Creating a release '$release_tag' from '$LATEST_PREREL_TAG' ..."
-  changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+  old_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
 
-  hub release create -m "$release_tag" -m "$changelog" "$release_tag"
+  hub release create -m "$release_tag" -m "$old_changelog" "$release_tag"
   echo "Deleting released prerelease '$LATEST_PREREL_TAG' ..."
   hub release delete "$LATEST_PREREL_TAG"
 }
@@ -65,7 +84,7 @@ _is_last_change_from_dev() {
   # to rc in a way that draft release contents should/can be moved to prerelease.
   #
   # This could also be out of sync if dev changes are pushed while this is running,
-  # but that should be rare. And in worst case changelog is missing something
+  # but that should be rare. And in worst case old_changelog is missing something
   # that has to be manually added later.
   git log -n 1 | \
   grep -C 20 "Merge pull request" | \
@@ -83,8 +102,8 @@ update_prerelease() {
       _merge_draft_to_prerelease
     else
       echo "Updating prerelease from change directly to rc branch ..."
-      _update_prerelease_tag \
-        $'\nRc was changed from non dev-branch merge, update changelog manually!'
+      _change_prerelease edit \
+        $'\nRc was changed from non dev-branch merge, update old_changelog manually!'
     fi
   fi
 }
