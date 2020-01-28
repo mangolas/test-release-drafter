@@ -35,25 +35,23 @@ dev_to_rc() {
   title="Release candidate $LATEST_DRAFT_TAG"
   msg='This is automatically created pull request from pushes to dev-branch.
 
-Merge this pull request to trigger release candidate process.'
+Merge this pull request to trigger release candidate deploy.'
 
   _create_or_update_pr dev rc "$title" "$msg" release-candidate
 }
 
 rc_to_master() {
-  title="Release $LATEST_PREREL_TAG"
+  title="Release ${LATEST_PREREL_TAG/-rc-*/}"
   msg='This is automatically created pull request from pushes to rc-branch.
 
-Merge this pull request to trigger release process.'
+Merge this pull request to trigger release deploy.'
 
   _create_or_update_pr rc master "$title" "$msg" release
 }
 
 master_to_dev() {
   title="Backmerge from master to dev"
-  msg='This is automatically created pull request from pushes to master-branch.
-
-Just close this pull request, if there are no real changes but only merge commits.'
+  msg='This is automatically created pull request from pushes to master-branch.'
 
   _create_or_update_pr master dev "$title" "$msg" back-merge
 }
