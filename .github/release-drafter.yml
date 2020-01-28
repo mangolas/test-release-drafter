@@ -1,7 +1,8 @@
-name-template: 'v$NEXT_MINOR_VERSION-rc-1 (dev)'
-tag-template: 'v$NEXT_MINOR_VERSION-rc-1'
+name-template: 'v$NEXT_MINOR_VERSION-rc (dev)'
+tag-template: 'v$NEXT_MINOR_VERSION-rc'
 version-template: $MAJOR.$MINOR
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+no-changes-template: '- No pull requests found for creating changelog entries'
 template: |
   $CHANGES
 replacers:
