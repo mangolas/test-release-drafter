@@ -21,7 +21,7 @@ _merge_draft_to_prerelease() {
 
   changelog_addition=(
     $'\n'
-    "[Changelog below from draft '$LATEST_DRAFT_TAG', merge manually to above]"
+    "> Changelog below from draft '$LATEST_DRAFT_TAG', human intelligence is needed!"
     $'\n'
     "$draft_changelog"
   )
@@ -99,7 +99,7 @@ update_prerelease() {
     else
       echo "Updating prerelease from change directly to rc branch ..."
       _change_prerelease edit \
-        $'\nRc was changed from non dev-branch merge, update changelog manually!'
+        $'\n> Rc was changed from non dev-branch merge, remember to update changelog manually!\n'
     fi
   fi
 }
