@@ -30,16 +30,6 @@ _merge_draft_to_prerelease() {
   hub release delete "$LATEST_DRAFT_TAG"
 }
 
-_promote_prerelease_to_release() {
-  local release_tag=${LATEST_PREREL_TAG/-rc*/}
-  echo "Creating a release '$release_tag' from '$LATEST_PREREL_TAG' ..."
-  changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
-
-  hub release create -m "$release_tag" -m "$changelog" "$release_tag"
-  echo "Deleting released prerelease '$LATEST_PREREL_TAG' ..."
-  hub release delete "$LATEST_PREREL_TAG"
-}
-
 _update_prerelease_tag() {
   local additional_msg=${1:-}
   local release_tag=${LATEST_PREREL_TAG/-rc*/}
@@ -56,6 +46,16 @@ _update_prerelease_tag() {
     -m "$prerelease_tag (rc)" -m "$changelog" -m "$additional_msg" \
     "$prerelease_tag"
   echo "Deleting previous prerelease '$LATEST_PREREL_TAG' ..."
+  hub release delete "$LATEST_PREREL_TAG"
+}
+
+_promote_prerelease_to_release() {
+  local release_tag=${LATEST_PREREL_TAG/-rc*/}
+  echo "Creating a release '$release_tag' from '$LATEST_PREREL_TAG' ..."
+  changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+
+  hub release create -m "$release_tag" -m "$changelog" "$release_tag"
+  echo "Deleting released prerelease '$LATEST_PREREL_TAG' ..."
   hub release delete "$LATEST_PREREL_TAG"
 }
 
