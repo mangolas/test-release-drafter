@@ -21,7 +21,7 @@ _merge_draft_to_prerelease() {
 
   changelog_addition=(
     $'\n'
-    "> Changelog below from draft '$LATEST_DRAFT_TAG', human intelligence is needed!"
+    "> Changelog from merged draft release '$LATEST_DRAFT_TAG'. Manual edit needed!"
     $'\n'
     "$draft_changelog"
   )
