@@ -34,8 +34,8 @@ _create_or_update_pr() {
 dev_to_rc() {
   local title="Release candidate $LATEST_DRAFT_TAG"
   local msg=(
-    $'This is automatically created pull request from pushes to dev-branch.\n'
-    $'Merge this pull request to trigger release candidate deploy.\n'
+    $'This is automatically created pull request from pushes to dev-branch.\n\n'
+    $'Merge this pull request to trigger release candidate deploy.\n\n'
     'If existing release candidate is found, contents of this pull request'
     'will become part of the release candidate'
   )
@@ -45,7 +45,7 @@ dev_to_rc() {
 rc_to_master() {
   local title="Release ${LATEST_PREREL_TAG/-rc-*/}"
   local msg=(
-    $'This is automatically created pull request from pushes to rc-branch.\n'
+    $'This is automatically created pull request from pushes to rc-branch.\n\n'
     'Merge this pull request to trigger release deploy.'
   )
   _create_or_update_pr rc master "$title" "${msg[*]}" release
