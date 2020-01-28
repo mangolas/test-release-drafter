@@ -29,7 +29,7 @@ _merge_draft_to_prerelease() {
   # *published_at* is only set when release is created. And 'release-drafter'
   # Github action is using that time stamp to check what is changed in dev until
   # that time. So we must be extra careful that dev pr changes are not lost in
-  # regard automatic old_changelog manipulation. It would be better if changes would
+  # regard automatic changelog manipulation. It would be better if changes would
   # just be calculated between last_release_tag..dev, but unfortunately
   # that is not the case.
   _change_prerelease create "${changelog_addition[*]}"
