@@ -12,6 +12,8 @@ This is a feature 5.
 
 This is a feature 6.
 
+Hotfix to rc 1
+
 This is a feature 7.
 
 This is a feature 8.
