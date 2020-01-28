@@ -21,7 +21,7 @@ _merge_draft_to_prerelease() {
 
   changelog_addition=(
     $'\n'
-    "[Changelog below from draft '$LATEST_DRAFT_TAG', merge manually to above]"
+    "> Changelog below from draft '$LATEST_DRAFT_TAG', human intelligence is needed!"
     $'\n'
     "$draft_changelog"
   )
@@ -80,7 +80,7 @@ _is_last_change_from_dev() {
   # to rc in a way that draft release contents should/can be moved to prerelease.
   #
   # This could also be out of sync if dev changes are pushed while this is running,
-  # but that should be rare. And in worst case old_changelog is missing something
+  # but that should be rare. And in worst case changelog is missing something
   # that has to be manually added later.
   git log -n 1 | \
   grep -C 20 "Merge pull request" | \
@@ -99,7 +99,7 @@ update_prerelease() {
     else
       echo "Updating prerelease from change directly to rc branch ..."
       _change_prerelease edit \
-        $'\nRc was changed from non dev-branch merge, update old_changelog manually!'
+        $'\n> Rc was changed from non dev-branch merge, remember to update changelog manually!\n'
     fi
   fi
 }
