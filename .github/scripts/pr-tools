@@ -27,33 +27,37 @@ _create_or_update_pr() {
       -H 'accept: application/vnd.github.shadow-cat-preview+json' \
       "repos/{owner}/{repo}/pulls/$pr_num" \
       -F "title=$title" \
-      -F "body=$msg" > /dev/null
+      -F "body=$msg" >/dev/null
   fi
 }
 
 dev_to_rc() {
-  title="Release candidate $LATEST_DRAFT_TAG"
-  msg='This is automatically created pull request from pushes to dev-branch.
-
-Merge this pull request to trigger release candidate deploy.'
-
-  _create_or_update_pr dev rc "$title" "$msg" release-candidate
+  local title="Release candidate $LATEST_DRAFT_TAG"
+  local msg=(
+    $'This is automatically created pull request from pushes to dev-branch.\n'
+    $'Merge this pull request to trigger release candidate deploy.\n'
+    'If existing release candidate is found, contents of this pull request'
+    'will become part of the release candidate'
+  )
+  _create_or_update_pr dev rc "$title" "${msg[*]}" release-candidate
 }
 
 rc_to_master() {
-  title="Release ${LATEST_PREREL_TAG/-rc-*/}"
-  msg='This is automatically created pull request from pushes to rc-branch.
-
-Merge this pull request to trigger release deploy.'
-
-  _create_or_update_pr rc master "$title" "$msg" release
+  local title="Release ${LATEST_PREREL_TAG/-rc-*/}"
+  local msg=(
+    $'This is automatically created pull request from pushes to rc-branch.\n'
+    'Merge this pull request to trigger release deploy.'
+  )
+  _create_or_update_pr rc master "$title" "${msg[*]}" release
 }
 
 master_to_dev() {
-  title="Backmerge from master to dev"
-  msg='This is automatically created pull request from pushes to master-branch.'
+  local title="Backmerge from master to dev"
+  local msg=(
+    'This is automatically created pull request from pushes to master-branch.'
+  )
 
-  _create_or_update_pr master dev "$title" "$msg" back-merge
+  _create_or_update_pr master dev "$title" "${msg[*]}" back-merge
 }
 
 "$@"
