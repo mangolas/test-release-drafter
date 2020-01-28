@@ -37,10 +37,6 @@ _merge_draft_to_prerelease() {
   hub release delete "$LATEST_DRAFT_TAG"
 }
 
-  echo "Current pre-release found. Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
-  git tag -f "$LATEST_PREREL_TAG"
-  git push -f origin "$LATEST_PREREL_TAG"
-
 _change_prerelease() {
   # 'create' or 'edit'
   local change_method=$1
