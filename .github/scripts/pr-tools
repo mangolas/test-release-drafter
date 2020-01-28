@@ -43,7 +43,7 @@ dev_to_rc() {
 }
 
 rc_to_master() {
-  local title="Release ${LATEST_PREREL_TAG/-rc-*/}"
+  local title="Release ${LATEST_PREREL_TAG/-rc*/}"
   local msg=(
     $'This is automatically created pull request from pushes to rc-branch.\n\n'
     'Merge this pull request to trigger release deploy.'
