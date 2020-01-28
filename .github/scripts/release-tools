@@ -18,30 +18,45 @@ _promote_draft_to_prerelease() {
 _merge_draft_to_prerelease() {
   echo "Merge draft '$LATEST_DRAFT_TAG' to '$LATEST_PREREL_TAG' ..."
   draft_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
-  prerel_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
 
-  hub release edit --draft=false --prerelease=true \
-    -m "$LATEST_PREREL_TAG (rc)" \
-    -m "$prerel_changelog" \
-    -m "[Changelog from draft '$LATEST_DRAFT_TAG', merge manually to above]" \
-    -m "$draft_changelog" \
-    "$LATEST_PREREL_TAG"
+  changelog_addition=(
+    $'\n'
+    "[Changelog below from draft '$LATEST_DRAFT_TAG', merge manually to above]"
+    $'\n'
+    "$draft_changelog"
+  )
+  _update_prerelease_tag "${changelog_addition[*]}"
   echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
   hub release delete "$LATEST_DRAFT_TAG"
 }
 
-_promote_prerelease_to_release() {
-  echo "Creating a release '$LATEST_PREREL_TAG' ..."
+_update_prerelease_tag() {
+  local additional_msg=${1:-}
+  local release_tag=${LATEST_PREREL_TAG/-rc*/}
+  local rc_num=${LATEST_PREREL_TAG/*-rc-/}
+  if [[ -z $rc_num ]]; then
+    echo "ERROR: Could not extract release candidate count from tag '$LATEST_PREREL_TAG'!"
+    exit 1
+  fi
+  local prerelease_tag="${release_tag}-rc-$(($rc_num + 1))"
+  echo "Creating new prerelease from '$LATEST_PREREL_TAG' to '$prerelease_tag' ..."
   changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
 
-  hub release edit --prerelease=false \
-    -m "$LATEST_PREREL_TAG" -m "$changelog" "$LATEST_PREREL_TAG"
+  hub release create --prerelease=true \
+    -m "$prerelease_tag (rc)" -m "$changelog" -m "$additional_msg" \
+    "$prerelease_tag"
+  echo "Deleting previous prerelease '$LATEST_PREREL_TAG' ..."
+  hub release delete "$LATEST_PREREL_TAG"
 }
 
-_update_pre_release_tag() {
-  echo "Current pre-release found. Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
-  git tag -f "$LATEST_PREREL_TAG"
-  git push -f origin "$LATEST_PREREL_TAG"
+_promote_prerelease_to_release() {
+  local release_tag=${LATEST_PREREL_TAG/-rc*/}
+  echo "Creating a release '$release_tag' from '$LATEST_PREREL_TAG' ..."
+  changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+
+  hub release create -m "$release_tag" -m "$changelog" "$release_tag"
+  echo "Deleting released prerelease '$LATEST_PREREL_TAG' ..."
+  hub release delete "$LATEST_PREREL_TAG"
 }
 
 _is_last_change_from_dev() {
@@ -60,17 +75,17 @@ _is_last_change_from_dev() {
 
 update_prerelease() {
   if [[ -z $LATEST_DRAFT_TAG && -z $LATEST_PREREL_TAG ]]; then
-    echo "Could not find either dev or rc Github release! Can't do anything sane."
+    echo "Could not find either draft or prerelease status Github release! Can't do anything sane."
   elif [[ -z $LATEST_PREREL_TAG ]]; then
     _promote_draft_to_prerelease
   else
     if _is_last_change_from_dev "$LATEST_DRAFT_TAG"; then
       _merge_draft_to_prerelease
     else
-      echo "Last push to rc did not originate from dev!"
-      echo "Changelog will not reflect changes automatically!"
+      echo "Updating prerelease from change directly to rc branch ..."
+      _update_prerelease_tag \
+        $'\nRc was changed from non dev-branch merge, update changelog manually!'
     fi
-    _update_pre_release_tag
   fi
 }
 
