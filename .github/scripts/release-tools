@@ -40,8 +40,8 @@ _merge_draft_to_prerelease() {
 _change_prerelease() {
   local prerel_tag=$1
   # 'create' or 'edit'
-  local change_method=$1
-  local additional_msg=${2:-}
+  local change_method=$2
+  local additional_msg=${3:-}
 
   echo "Advancing tag '$prerel_tag' to rc HEAD ..."
   git tag -f "$prerel_tag"
