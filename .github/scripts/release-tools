@@ -43,7 +43,7 @@ _change_prerelease() {
   local change_method=$2
   local additional_msg=${3:-}
 
-  echo "Advancing tag '$prerel_tag' to rc HEAD ..."
+  echo "Advancing tag '$prerel_tag' to current branch HEAD ..."
   git tag -f "$prerel_tag"
   git push -f origin "$prerel_tag"
 
