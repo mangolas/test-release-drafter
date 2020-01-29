@@ -29,18 +29,27 @@ find_release_by_type() {
   find_release "select(.type==\"$type\")"
 }
 
-find_release_by_type_and_namepart() {
-  local type=$1
-  local namepart=$2
-  find_release "select((.tag | contains(\"$namepart\")) and .type==\"$type\")"
+find_rc_prerelease() {
+  find_release 'select(
+    (.type=="pre-release") and
+    (.tag | contains("rc")) and
+    (.tag | contains("hotfix") | not)
+  )'
+}
+
+find_hotfix_prerelease() {
+  find_release 'select(
+    (.type=="pre-release") and
+    (.tag | contains("hotfix"))
+  )'
 }
 
 fetch_latest_tag_names() {
   local releases
   releases=$(fetch_releases)
   LATEST_DRAFT_TAG=$(echo "$releases" | find_release_by_type 'draft')
-  LATEST_RC_PREREL_TAG=$(echo "$releases" | find_release_by_type_and_namepart 'pre-release' rc)
-  LATEST_HOTFIX_PREREL_TAG=$(echo "$releases" | find_release_by_type_and_namepart 'pre-release' hotfix)
+  LATEST_RC_PREREL_TAG=$(echo "$releases" | find_rc_prerelease)
+  LATEST_HOTFIX_PREREL_TAG=$(echo "$releases" | find_hotfix_prerelease)
   LATEST_RELEASE_TAG=$(echo "$releases" | find_release_by_type '')
   echo "Latest draft release tag: $LATEST_DRAFT_TAG"
   echo "Latest rc prerelease tag: $LATEST_RC_PREREL_TAG"

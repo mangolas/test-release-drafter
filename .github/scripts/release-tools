@@ -31,7 +31,7 @@ _merge_draft_to_prerelease() {
   # that time. So we must be extra careful that dev pr changes are not lost in
   # regard automatic changelog manipulation. It would be better if changes would
   # just be calculated between last_release_tag..dev, but unfortunately
-  # that is not the case.
+  # that is not the case. See https://github.com/release-drafter/release-drafter/issues/222
   _change_prerelease "$LATEST_RC_PREREL_TAG" create "${changelog_addition[*]}"
   echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
   hub release delete "$LATEST_DRAFT_TAG"
@@ -43,13 +43,12 @@ _change_prerelease() {
   local change_method=$2
   local additional_msg=${3:-}
 
-  echo "Advancing tag '$prerel_tag' to rc HEAD ..."
+  echo "Advancing tag '$prerel_tag' to current branch HEAD ..."
   git tag -f "$prerel_tag"
   git push -f origin "$prerel_tag"
 
   old_changelog=$(hub release show -f '%b' $prerel_tag)
   if [[ $change_method == 'create' ]]; then
-
     echo "Deleting previous prerelease '$prerel_tag' ..."
     hub release delete "$prerel_tag"
 
@@ -68,12 +67,12 @@ _change_prerelease() {
 _promote_prerelease_to_release() {
   local prerel_tag=$1
   local release_tag=$2
-  #local release_tag=${LATEST_RC_PREREL_TAG/-rc*/}
-  echo "Creating a release '$release_tag' from '$prerel_tag' ..."
   old_changelog=$(hub release show -f '%b' $prerel_tag)
 
+  echo "Creating a release '$release_tag' from '$prerel_tag' ..."
   hub release create -m "$release_tag" -m "$old_changelog" "$release_tag"
-  echo "Deleting released prerelease '$prerel_tag' ..."
+
+  echo "Deleting prerelease '$prerel_tag' ..."
   hub release delete "$prerel_tag"
 }
 
@@ -109,12 +108,12 @@ update_prerelease() {
 
 update_hotfix_prerelease() {
   if [[ -z $LATEST_RELEASE_TAG ]]; then
-    echo "ERROR: Could not find latest release! Can't proceed on hotfix."
+    echo "ERROR: Could not find latest release! Can't proceed with hotfix."
     exit 1
   fi
   if [[ -z $LATEST_HOTFIX_PREREL_TAG ]]; then
-    local hotfix_tag="${LATEST_RELEASE_TAG}-hotfix-$(date +%F)"
-    echo "Creting new hotfix prerelease '$hotfix_tag' ..."
+    local hotfix_tag="${LATEST_RELEASE_TAG}-hotfix-$(date +%F)-rc"
+    echo "Creating new hotfix prerelease '$hotfix_tag' ..."
     hub release create --prerelease=true \
       -m "$hotfix_tag (test)" \
       -m $'> Remember to update changelog!\n\n' \
@@ -130,7 +129,7 @@ release_new_version() {
     echo "ERROR: Could not find prerelease to release!"
     exit 1
   elif [[ -n $LATEST_HOTFIX_PREREL_TAG ]]; then
-    _promote_prerelease_to_release "$LATEST_HOTFIX_PREREL_TAG" "$LATEST_HOTFIX_PREREL_TAG"
+    _promote_prerelease_to_release "$LATEST_HOTFIX_PREREL_TAG" "${LATEST_HOTFIX_PREREL_TAG/-rc*/}"
   else
     _promote_prerelease_to_release "$LATEST_RC_PREREL_TAG" "${LATEST_RC_PREREL_TAG/-rc*/}"
   fi

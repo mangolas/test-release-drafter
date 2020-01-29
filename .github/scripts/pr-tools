@@ -52,7 +52,7 @@ rc_to_master() {
 }
 
 hotfix_to_master() {
-  local title="Release ${LATEST_HOTFIX_PREREL_TAG}"
+  local title="Release ${LATEST_HOTFIX_PREREL_TAG/-rc*/}"
   local msg=(
     $'This is automatically created pull request from pushes to hotfix-branch.\n\n'
     'Merge this pull request to trigger release deploy.'
