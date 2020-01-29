@@ -12,11 +12,11 @@ _promote_draft_to_prerelease() {
   old_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
   hub release edit --draft=false --prerelease=true \
-    -m "$LATEST_DRAFT_TAG (rc)" -m "$old_changelog" "$LATEST_DRAFT_TAG"
+    -m "$LATEST_DRAFT_TAG (test)" -m "$old_changelog" "$LATEST_DRAFT_TAG"
 }
 
 _merge_draft_to_prerelease() {
-  echo "Merge draft '$LATEST_DRAFT_TAG' to '$LATEST_PREREL_TAG' ..."
+  echo "Merge draft '$LATEST_DRAFT_TAG' to '$LATEST_RC_PREREL_TAG' ..."
   draft_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
   changelog_addition=(
@@ -31,47 +31,49 @@ _merge_draft_to_prerelease() {
   # that time. So we must be extra careful that dev pr changes are not lost in
   # regard automatic changelog manipulation. It would be better if changes would
   # just be calculated between last_release_tag..dev, but unfortunately
-  # that is not the case.
-  _change_prerelease create "${changelog_addition[*]}"
+  # that is not the case. See https://github.com/release-drafter/release-drafter/issues/222
+  _change_prerelease "$LATEST_RC_PREREL_TAG" create "${changelog_addition[*]}"
   echo "Deleting merged '$LATEST_DRAFT_TAG' draft release ..."
   hub release delete "$LATEST_DRAFT_TAG"
 }
 
 _change_prerelease() {
+  local prerel_tag=$1
   # 'create' or 'edit'
-  local change_method=$1
-  local additional_msg=${2:-}
+  local change_method=$2
+  local additional_msg=${3:-}
 
-  echo "Advancing tag '$LATEST_PREREL_TAG' to rc HEAD ..."
-  git tag -f "$LATEST_PREREL_TAG"
-  git push -f origin "$LATEST_PREREL_TAG"
+  echo "Advancing tag '$prerel_tag' to current branch HEAD ..."
+  git tag -f "$prerel_tag"
+  git push -f origin "$prerel_tag"
 
-  old_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+  old_changelog=$(hub release show -f '%b' $prerel_tag)
   if [[ $change_method == 'create' ]]; then
+    echo "Deleting previous prerelease '$prerel_tag' ..."
+    hub release delete "$prerel_tag"
 
-    echo "Deleting previous prerelease '$LATEST_PREREL_TAG' ..."
-    hub release delete "$LATEST_PREREL_TAG"
-
-    echo "Creating updated prerelease '$LATEST_PREREL_TAG' ..."
+    echo "Creating updated prerelease '$prerel_tag' ..."
     hub release create --prerelease=true \
-      -m "$LATEST_PREREL_TAG (rc)" -m "$old_changelog" -m "$additional_msg" \
-      "$LATEST_PREREL_TAG"
+      -m "$prerel_tag (test)" -m "$old_changelog" -m "$additional_msg" \
+      "$prerel_tag"
   else
-    echo "Editing prerelease '$LATEST_PREREL_TAG' ..."
+    echo "Editing prerelease '$prerel_tag' ..."
     hub release edit --prerelease=true \
-      -m "$LATEST_PREREL_TAG (rc)" -m "$old_changelog" -m "$additional_msg" \
-      "$LATEST_PREREL_TAG"
+      -m "$prerel_tag (test)" -m "$old_changelog" -m "$additional_msg" \
+      "$prerel_tag"
   fi
 }
 
 _promote_prerelease_to_release() {
-  local release_tag=${LATEST_PREREL_TAG/-rc*/}
-  echo "Creating a release '$release_tag' from '$LATEST_PREREL_TAG' ..."
-  old_changelog=$(hub release show -f '%b' $LATEST_PREREL_TAG)
+  local prerel_tag=$1
+  local release_tag=$2
+  old_changelog=$(hub release show -f '%b' $prerel_tag)
 
+  echo "Creating a release '$release_tag' from '$prerel_tag' ..."
   hub release create -m "$release_tag" -m "$old_changelog" "$release_tag"
-  echo "Deleting released prerelease '$LATEST_PREREL_TAG' ..."
-  hub release delete "$LATEST_PREREL_TAG"
+
+  echo "Deleting prerelease '$prerel_tag' ..."
+  hub release delete "$prerel_tag"
 }
 
 _is_last_change_from_dev() {
@@ -89,27 +91,47 @@ _is_last_change_from_dev() {
 }
 
 update_prerelease() {
-  if [[ -z $LATEST_DRAFT_TAG && -z $LATEST_PREREL_TAG ]]; then
+  if [[ -z $LATEST_DRAFT_TAG && -z $LATEST_RC_PREREL_TAG ]]; then
     echo "Could not find either draft or prerelease status Github release! Can't do anything sane."
-  elif [[ -z $LATEST_PREREL_TAG ]]; then
+  elif [[ -z $LATEST_RC_PREREL_TAG ]]; then
     _promote_draft_to_prerelease
   else
     if _is_last_change_from_dev "$LATEST_DRAFT_TAG"; then
       _merge_draft_to_prerelease
     else
       echo "Updating prerelease from change directly to rc branch ..."
-      _change_prerelease edit \
+      _change_prerelease "$LATEST_RC_PREREL_TAG" edit \
         $'\n> Rc was changed from non dev-branch merge, remember to update changelog manually!\n'
     fi
   fi
 }
 
-release_new_version() {
-  if [[ -z $LATEST_PREREL_TAG ]]; then
-    echo "ERROR: Could not find rc Github release! Can't proceed with release!"
+update_hotfix_prerelease() {
+  if [[ -z $LATEST_RELEASE_TAG ]]; then
+    echo "ERROR: Could not find latest release! Can't proceed with hotfix."
     exit 1
+  fi
+  if [[ -z $LATEST_HOTFIX_PREREL_TAG ]]; then
+    local hotfix_tag="${LATEST_RELEASE_TAG}-hotfix-$(date +%F)-rc"
+    echo "Creating new hotfix prerelease '$hotfix_tag' ..."
+    hub release create --prerelease=true \
+      -m "$hotfix_tag (test)" \
+      -m $'> Remember to update changelog!\n\n' \
+      "$hotfix_tag"
   else
-    _promote_prerelease_to_release
+    echo "Updating hotfix prerelease '$LATEST_HOTFIX_PREREL_TAG' ..."
+    _change_prerelease "$LATEST_HOTFIX_PREREL_TAG" create ''
+  fi
+}
+
+release_new_version() {
+  if [[ -z $LATEST_RC_PREREL_TAG && -z $LATEST_HOTFIX_PREREL_TAG ]]; then
+    echo "ERROR: Could not find prerelease to release!"
+    exit 1
+  elif [[ -n $LATEST_HOTFIX_PREREL_TAG ]]; then
+    _promote_prerelease_to_release "$LATEST_HOTFIX_PREREL_TAG" "${LATEST_HOTFIX_PREREL_TAG/-rc*/}"
+  else
+    _promote_prerelease_to_release "$LATEST_RC_PREREL_TAG" "${LATEST_RC_PREREL_TAG/-rc*/}"
   fi
 }
 
