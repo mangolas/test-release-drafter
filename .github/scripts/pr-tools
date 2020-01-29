@@ -43,7 +43,7 @@ dev_to_rc() {
 }
 
 rc_to_master() {
-  local title="Release ${LATEST_PREREL_TAG/-rc*/}"
+  local title="Release ${LATEST_RC_PREREL_TAG/-rc*/}"
   local msg=(
     $'This is automatically created pull request from pushes to rc-branch.\n\n'
     'Merge this pull request to trigger release deploy.'
@@ -51,12 +51,20 @@ rc_to_master() {
   _create_or_update_pr rc master "$title" "${msg[*]}" release
 }
 
+hotfix_to_master() {
+  local title="Release ${LATEST_HOTFIX_PREREL_TAG}"
+  local msg=(
+    $'This is automatically created pull request from pushes to hotfix-branch.\n\n'
+    'Merge this pull request to trigger release deploy.'
+  )
+  _create_or_update_pr hotfix master "$title" "${msg[*]}" release
+}
+
 master_to_dev() {
   local title="Backmerge from master to dev"
   local msg=(
     'This is automatically created pull request from pushes to master-branch.'
   )
-
   _create_or_update_pr master dev "$title" "${msg[*]}" back-merge
 }
 
