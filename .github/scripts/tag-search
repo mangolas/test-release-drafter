@@ -6,30 +6,46 @@ set -eo pipefail
 
 # Limiting release search to first 20 releses, documentation does not say clearly that results are shown by
 # creation order latest first, but that seems to be the case. There anyway should only be one/zero meaningful
-# draft release and one/zero pre-release on the fly in the top hits.
+# draft release and max couple of pre-releases on the fly in the top hits.
 
 fetch_releases() {
   hub release --include-drafts -L 20 \
     -f '{"tag": "%T", "type":"%S", "created":"%ct"}%n'
 }
 
+find_release() {
+  local selector=$1
+  jq -s -r '
+    map('"$selector"') |
+    sort_by(.created) |
+    reverse |
+    first |
+    .tag // empty
+  '
+}
+
 find_release_by_type() {
   local type=$1
-  local releases=$2
-  echo "$releases" |
-  jq -s -r '
-    map(select(.type=="'"$type"'")) |
-    sort_by(.created) | reverse | first | .tag // empty
-  '
+  find_release "select(.type==\"$type\")"
+}
+
+find_release_by_type_and_namepart() {
+  local type=$1
+  local namepart=$2
+  find_release "select((.tag | contains(\"$namepart\")) and .type==\"$type\")"
 }
 
 fetch_latest_tag_names() {
   local releases
   releases=$(fetch_releases)
-  LATEST_DRAFT_TAG=$(find_release_by_type 'draft' "$releases")
-  LATEST_PREREL_TAG=$(find_release_by_type 'pre-release' "$releases")
+  LATEST_DRAFT_TAG=$(echo "$releases" | find_release_by_type 'draft')
+  LATEST_RC_PREREL_TAG=$(echo "$releases" | find_release_by_type_and_namepart 'pre-release' rc)
+  LATEST_HOTFIX_PREREL_TAG=$(echo "$releases" | find_release_by_type_and_namepart 'pre-release' hotfix)
+  LATEST_RELEASE_TAG=$(echo "$releases" | find_release_by_type '')
   echo "Latest draft release tag: $LATEST_DRAFT_TAG"
-  echo "Latest prerelease tag: $LATEST_PREREL_TAG"
+  echo "Latest rc prerelease tag: $LATEST_RC_PREREL_TAG"
+  echo "Latest hotfix prerelease tag: $LATEST_HOTFIX_PREREL_TAG"
+  echo "Latest release tag: $LATEST_RELEASE_TAG"
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
