@@ -11,6 +11,7 @@ _update_tag() {
   local tag=$1
 
   echo "Current git HEAD:"
+  echo "----"
   git log -n 1
   echo "----"
   echo "Setting tag '$tag' to current HEAD ..."
