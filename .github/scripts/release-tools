@@ -23,9 +23,9 @@ _promote_draft_to_prerelease() {
   echo "Promote draft '$LATEST_DRAFT_TAG' to release candidate ..."
   old_changelog=$(hub release show -f '%b' $LATEST_DRAFT_TAG)
 
-  _update_tag "$LATEST_DRAFT_TAG"
   hub release edit --draft=false --prerelease=true \
     -m "$LATEST_DRAFT_TAG (test)" -m "$old_changelog" "$LATEST_DRAFT_TAG"
+  _update_tag "$LATEST_DRAFT_TAG"
 }
 
 _merge_draft_to_prerelease() {
@@ -56,8 +56,6 @@ _change_prerelease() {
   local change_method=$2
   local additional_msg=${3:-}
 
-  _update_tag "$prerel_tag"
-
   old_changelog=$(hub release show -f '%b' $prerel_tag)
   if [[ $change_method == 'create' ]]; then
     echo "Deleting previous prerelease '$prerel_tag' ..."
@@ -73,6 +71,7 @@ _change_prerelease() {
       -m "$prerel_tag (test)" -m "$old_changelog" -m "$additional_msg" \
       "$prerel_tag"
   fi
+  _update_tag "$prerel_tag"
 }
 
 _promote_prerelease_to_release() {
@@ -80,13 +79,12 @@ _promote_prerelease_to_release() {
   local release_tag=$2
   old_changelog=$(hub release show -f '%b' $prerel_tag)
 
-  _update_tag "$release_tag"
-
   echo "Creating a release '$release_tag' from '$prerel_tag' ..."
   hub release create -m "$release_tag" -m "$old_changelog" "$release_tag"
 
   echo "Deleting prerelease '$prerel_tag' ..."
   hub release delete "$prerel_tag"
+  _update_tag "$release_tag"
 }
 
 _is_last_change_from_dev() {
