@@ -1,0 +1,124 @@
+#!/usr/bin/env joker
+
+(require '[joker.json :as json]
+         '[joker.os :as os]
+         '[joker.string :as string]
+         '[joker.set :refer [intersection]])
+
+(defn exit [code]
+  (os/exit code))
+
+(defn cmd [& args]
+  (let [result (apply os/sh args)]
+    (if (:success result)
+      (:out result)
+      (do
+        (println "ERROR! Failed to execute:" (string/join " " args))
+        (println (:err result))
+        (exit (:exit result))))))
+
+(defn pull-request-ids [rev_to rev_from]
+  ;; XXX(lassi) This is the weakest point of this approach, it's basically
+  ;; possible to merge Github pull request with different message, though
+  ;; pretty sure it's rarely done.
+  ;; Pull requests could be searched by en masse and then matched by sha
+  ;; from git log, but it seems only way to search pull request are time
+  ;; based queries.
+  (let [pr-merge-re #"Merge pull request #(\d+).*"]
+    (->> (cmd "git" "--no-pager" "log" "--merges" (str rev_to "..." rev_from))
+         string/split-lines
+         (map string/trim)
+         (map #(re-matches pr-merge-re %))
+         (remove nil?)
+         (map second))))
+
+(defn github-query [query]
+  (let [check-error (fn [result]
+                      (when (:errors result)
+                        (println "ERROR! graphql query failed")
+                        (prn result)
+                        (exit 1))
+                      result)]
+    (-> (cmd "hub" "api" "graphql" "-f" (str "query="query))
+        (json/read-string {:keywords? true})
+        check-error)))
+
+(defn query-pull-request-data [id]
+  (let [query "query {
+                 repository(owner: \"{owner}\", name: \"{repo}\") {
+                   pullRequest(number: %s) {
+                     number
+                     body
+                     title
+                     mergedAt
+                     author {
+                       login
+                     }
+                     labels(first:10) {
+                       nodes {
+                         name
+                       }
+                     }
+                   }
+                 }
+               }"]
+    (-> (github-query (format query id))
+        :data
+        :repository
+        :pullRequest
+        (update :labels #(->> % :nodes (map :name) set)))))
+
+(defn organize-pull-requests [configs pull-requests]
+  (let [label-matcher (fn [pred label-set]
+                        (fn [pr]
+                          (pred (intersection (:labels pr) label-set))))
+        known-labels (set (mapcat :labels configs))
+        prs-by-config (fn [config]
+                        (let [pred (if (:unknown-label? config)
+                                     (label-matcher empty? known-labels)
+                                     (label-matcher seq (:labels config)))]
+                          (filter pred pull-requests)))]
+    (->> configs
+      (map #(assoc % :pull-requests (prs-by-config %))))))
+
+(defn pull-request-str [pull-request]
+  (let [jira-re #"((OPA|PAR)-\d+):?"
+        jira-link "[$1](https://postinext.atlassian.net/browse/$1)"]
+    (->> ["-"
+          (-> (:title pull-request)
+              (string/replace jira-re jira-link))
+          (str "@" (-> pull-request :author :login))
+          (str "(#" (:number pull-request) ")")]
+         (string/join " "))))
+
+(defn gen-change-log-lines [pull-requests-by-config]
+  (-> (fn [result config]
+        (cond-> result
+          (and (not (:skip? config))
+               (seq (:pull-requests config)))
+          (concat [(:title config) ""]
+                  (->> (:pull-requests config)
+                       (sort-by :mergedAt)
+                       (map pull-request-str))
+                  [""])))
+      (reduce [] pull-requests-by-config)))
+
+(def config
+  [{:title "## Features" :labels #{"feat" "feature"}}
+   {:title "## Fixes" :labels #{"fix" "bug"}}
+   {:title "## Internal" :labels #{"chore" "internal"}}
+   {:title "## Misc" :unknown-label? true}
+   {:skip? true :labels #{"skip-changelog"}}])
+
+(defn main [[revision_to revision_from]]
+  (when-not (and revision_to revision_from)
+    (println "Usage: <git revision to> <git revision from> eg. v2.17 HEAD")
+    (exit 1))
+  (->> (pull-request-ids revision_from revision_to)
+       (map query-pull-request-data)
+       (organize-pull-requests config)
+       gen-change-log-lines
+       (string/join "\n")
+       println))
+
+(main *command-line-args*)

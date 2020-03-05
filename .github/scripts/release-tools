@@ -6,6 +6,7 @@ set -eo pipefail
 
 source .github/scripts/tag-search
 fetch_latest_tag_names
+echo_tags
 
 _update_tag() {
   local tag=$1
