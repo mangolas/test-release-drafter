@@ -115,7 +115,9 @@
     (println "Usage: <git revision to> <git revision from> eg. v2.17 HEAD")
     (exit 1))
   (->> (pull-request-ids revision_from revision_to)
-       (map query-pull-request-data)
+       ;; Run queries simultaneously as we have to query once per pr
+       (mapv #(go (query-pull-request-data %)))
+       (mapv <!)
        (organize-pull-requests config)
        gen-change-log-lines
        (string/join "\n")
