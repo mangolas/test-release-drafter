@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Installs needed binaries to /opt/bin
+
+mkdir -p /opt/bin
+
+HUB_VERSION=2.14.1
+HUB_URL="https://github.com/github/hub/releases/download/v${HUB_VERSION}/hub-linux-amd64-${HUB_VERSION}.tgz"
+curl -L "${HUB_URL}" -o /tmp/hub.tgz
+tar xzf /tmp/hub.tgz -C /tmp
+mv /tmp/hub-*/bin/hub /opt/bin/hub
+
+JOKER_VERSION=0.14.2
+JOKER_URL="https://github.com/candid82/joker/releases/download/v${JOKER_VERSION}/joker-{JOKER_VERSION}-linux-amd64.zip"
+curl -L "${JOKER_URL}" -o /tmp/joker.zip
+unzip /tmp/joker.zip -d /tmp
+mv /tmp/joker /opt/bin/joker

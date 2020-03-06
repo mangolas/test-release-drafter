@@ -6,7 +6,10 @@
          '[joker.set :refer [intersection]])
 
 (defn exit [code]
-  (os/exit code))
+  ;; Bit hackish way to prevent real exit when running code on remote repl
+  (if (some #(string/includes? % "--repl") (os/args))
+    (println "Would exit with code" code)
+    (os/exit code)))
 
 (defn cmd [& args]
   (let [result (apply os/sh args)]
@@ -25,7 +28,7 @@
   ;; from git log, but it seems only way to search pull request are time
   ;; based queries.
   (let [pr-merge-re #"Merge pull request #(\d+).*"]
-    (->> (cmd "git" "--no-pager" "log" "--merges" (str rev_to "..." rev_from))
+    (->> (cmd "git" "--no-pager" "log" "--merges" (str rev_to ".." rev_from))
          string/split-lines
          (map string/trim)
          (map #(re-matches pr-merge-re %))
@@ -110,14 +113,17 @@
    {:title "## Misc" :unknown-label? true}
    {:skip? true :labels #{"skip-changelog"}}])
 
-(defn main [[revision_to revision_from]]
+(defn main [[revision_to revision_from query-only?]]
   (when-not (and revision_to revision_from)
-    (println "Usage: <git revision to> <git revision from> eg. v2.17 HEAD")
+    (println "Usage: <git revision to> <git revision from> [--query-only] eg. v2.17 HEAD")
     (exit 1))
-  (->> (pull-request-ids revision_from revision_to)
+  (->> (pull-request-ids revision_to revision_from)
        ;; Run queries simultaneously as we have to query once per pr
        (mapv #(go (query-pull-request-data %)))
        (mapv <!)
+       (#(if (seq query-only?)
+           (do (-> % json/write-string println) (exit 0))
+           %))
        (organize-pull-requests config)
        gen-change-log-lines
        (string/join "\n")

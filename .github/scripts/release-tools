@@ -6,7 +6,6 @@ set -eo pipefail
 
 source .github/scripts/tag-search
 fetch_latest_tag_names
-echo_tags
 
 _update_tag() {
   local tag=$1
@@ -101,6 +100,45 @@ _is_last_change_from_dev() {
   grep -C 20 "Merge pull request" | \
   grep -C 20 "/dev" | \
   grep "$version"
+}
+
+_next_draft_version() {
+  local cur_ver=$1
+
+  if [[ $cur_ver =~ v([[:digit:]]+).([[:digit:]]+) ]]; then
+    echo "v${BASH_REMATCH[1]}.$(( ${BASH_REMATCH[2]} + 1 ))-rc"
+  else
+    echo "Could not parse version numbers from '$cur_ver'"
+    exit 1
+  fi
+}
+
+update_draft() {
+  local prev_tag
+  if [[ -n $LATEST_HOTFIX_PREREL_TAG ]]; then
+    prev_tag=$LATEST_HOTFIX_PREREL_TAG
+  elif [[ -n $LATEST_RC_PREREL_TAG ]]; then
+    prev_tag=$LATEST_RC_PREREL_TAG
+  else
+    prev_tag=$LATEST_RELEASE_TAG
+  fi
+
+  if [[ -z $prev_tag ]]; then
+    echo "Could not find any previous Github release! Can't proceed on draft creation."
+    exit 1
+  fi
+
+  local draft_tag=$LATEST_DRAFT_TAG
+  if [[ -z $draft_tag ]]; then
+    draft_tag=$(_next_draft_version "$prev_tag")
+    echo "Current draft release does not exist, creating new for tag $draft_tag ..."
+    echo hub release create --draft=true "$draft_tag"
+  fi
+
+  local changelog;
+  changelog=$(.github/scripts/changelog.joke "$prev_tag" HEAD)
+  echo "Updating draft release changelog contents ..."
+  echo hub release edit --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
 }
 
 update_prerelease() {

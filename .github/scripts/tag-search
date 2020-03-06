@@ -44,13 +44,6 @@ find_hotfix_prerelease() {
   )'
 }
 
-echo_tags() {
-  echo "Latest draft release tag: $LATEST_DRAFT_TAG"
-  echo "Latest rc prerelease tag: $LATEST_RC_PREREL_TAG"
-  echo "Latest hotfix prerelease tag: $LATEST_HOTFIX_PREREL_TAG"
-  echo "Latest release tag: $LATEST_RELEASE_TAG"
-}
-
 fetch_latest_tag_names() {
   local releases
   releases=$(fetch_releases)
@@ -58,14 +51,10 @@ fetch_latest_tag_names() {
   LATEST_RC_PREREL_TAG=$(echo "$releases" | find_rc_prerelease)
   LATEST_HOTFIX_PREREL_TAG=$(echo "$releases" | find_hotfix_prerelease)
   LATEST_RELEASE_TAG=$(echo "$releases" | find_release_by_type '')
-  echo '
-  {
-    "latest_draft_tag": "'"$LATEST_DRAFT_TAG"'",
-    "latest_rc_prerelease_tag": "'"$LATEST_RC_PREREL_TAG"'",
-    "latest_hotfix_prerelease_tag": "'"$LATEST_HOTFIX_PREREL_TAG"'",
-    "latest_release_tag": "'"$LATEST_RELEASE_TAG"'"
-  }
-  '
+  echo "Latest draft release tag: $LATEST_DRAFT_TAG"
+  echo "Latest rc prerelease tag: $LATEST_RC_PREREL_TAG"
+  echo "Latest hotfix prerelease tag: $LATEST_HOTFIX_PREREL_TAG"
+  echo "Latest release tag: $LATEST_RELEASE_TAG"
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
