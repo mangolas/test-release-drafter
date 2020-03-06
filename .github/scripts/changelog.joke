@@ -16,8 +16,8 @@
     (if (:success result)
       (:out result)
       (do
-        (pr-err "ERROR! Failed to execute:" (string/join " " args))
-        (pr-err (:err result))
+        (pr-err "ERROR! Failed to execute:" (string/join " " args) "\n")
+        (pr-err (:err result) "\n")
         (exit (:exit result))))))
 
 (defn pull-request-ids [rev_to rev_from]
@@ -33,15 +33,13 @@
          (map string/trim)
          (map #(re-matches pr-merge-re %))
          (remove nil?)
-         (map second)
-         (#(doto % (->> (pr-err "All the merged pull requests between"
-                                rev_to ".." rev_from ":")))))))
+         (map second))))
 
 (defn github-query [query]
   (let [check-error (fn [result]
                       (when (:errors result)
-                        (println "ERROR! graphql query failed")
-                        (prn result)
+                        (pr-err "ERROR! graphql query failed\n")
+                        (pr-err result "\n")
                         (exit 1))
                       result)]
     (-> (cmd "hub" "api" "graphql" "-f" (str "query="query))
@@ -117,9 +115,8 @@
 
 (defn main [[revision_to revision_from query-only?]]
   (when-not (and revision_to revision_from)
-    (println "Usage: <git revision to> <git revision from> [--query-only] eg. v2.17 HEAD")
+    (pr-err "Usage: <git revision to> <git revision from> [--query-only] eg. v2.17 HEAD\n")
     (exit 1))
-  (pr-err "Start creating changelog from pull requests ...")
   (->> (pull-request-ids revision_to revision_from)
        ;; Run queries simultaneously as we have to query once per pr
        (mapv #(go (query-pull-request-data %)))
