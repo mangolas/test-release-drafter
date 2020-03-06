@@ -9,17 +9,21 @@ jobs:
   update_draft_release_changelog:
     runs-on: ubuntu-latest
     steps:
-      ## This is really slow
-      #- uses: release-drafter/release-drafter@v5
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Using a branch which has dockerless variant, runs in a few seconds as above
-      # is over a minute. Change to official project when https://github.com/release-drafter/release-drafter/pull/376
-      # has been done.
-      - uses: casz/release-drafter@chore/probot-adapter
+      - uses: actions/checkout@v2
+      - run: git fetch --prune --unshallow
+      - id: cache
+        uses: actions/cache@v1
+        with:
+          path: /opt/bin
+          key: bins-${{ hashFiles('.github/scripts/install-bins') }}
+      - name: Install bins
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: .github/scripts/install-bins
+      - run: echo "::add-path::/opt/bin"
+      - name: Update draft release and it's changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/release-tools update_draft
 
   create_release_candidate_pull_request:
     runs-on: ubuntu-latest
@@ -28,10 +32,12 @@ jobs:
       - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
-        with: {path: /opt/bin, key: opt-bin-1}
-      - name: Install hub
+        with:
+          path: /opt/bin
+          key: ${{ hashFiles('.github/scripts/install-bins') }}
+      - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
-        run: .github/scripts/install-hub
+        run: .github/scripts/install-bins
       - run: echo "::add-path::/opt/bin"
       - name: Create pull request from dev to rc, if needed
         env:

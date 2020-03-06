@@ -12,10 +12,12 @@ jobs:
       - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
-        with: {path: /opt/bin, key: opt-bin-1}
-      - name: Install hub
+        with:
+          path: /opt/bin
+          key: ${{ hashFiles('.github/scripts/install-bins') }}
+      - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
-        run: .github/scripts/install-hub
+        run: .github/scripts/install-bins
       - run: echo "::add-path::/opt/bin"
       - name: Update release candidate Github release
         env:
@@ -29,10 +31,12 @@ jobs:
       - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
-        with: {path: /opt/bin, key: opt-bin-1}
-      - name: Install hub
+        with:
+          path: /opt/bin
+          key: ${{ hashFiles('.github/scripts/install-bins') }}
+      - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
-        run: .github/scripts/install-hub
+        run: .github/scripts/install-bins
       - run: echo "::add-path::/opt/bin"
       - name: Create pull request from rc to master, if needed
         env:
