@@ -10,8 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: git fetch --depth=999 origin +refs/tags/*:refs/tags/*
+      - run: git fetch --depth=999 +refs/tags/*:refs/tags/*
       - run: git checkout dev
+      - run: git log --merges v1.18..HEAD
       - id: cache
         uses: actions/cache@v1
         with:
