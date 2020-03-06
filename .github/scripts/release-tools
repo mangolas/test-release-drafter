@@ -132,7 +132,7 @@ update_draft() {
   if [[ -z $draft_tag ]]; then
     draft_tag=$(_next_draft_version "$prev_tag")
     echo "Current draft release does not exist, creating new draft '$draft_tag' ..."
-    hub release create --draft=true -m "$draft_tag (dev)" -t "$draft_tag" "$draft_tag"
+    hub release create --draft=true -m "$draft_tag (dev)" -t dev "$draft_tag"
   fi
 
   local changelog;
