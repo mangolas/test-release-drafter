@@ -20,23 +20,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-bins
       - run: echo "::add-path::/opt/bin"
-      - name: Creates or updates draft release and it's changelog
+      - name: Update draft release and it's changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/release-tools update_draft
-
-#    steps:
-#      ## This is really slow
-#      #- uses: release-drafter/release-drafter@v5
-#      #  env:
-#      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      # Using a branch which has dockerless variant, runs in a few seconds as above
-#      # is over a minute. Change to official project when https://github.com/release-drafter/release-drafter/pull/376
-#      # has been done.
-#      - uses: casz/release-drafter@chore/probot-adapter
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create_release_candidate_pull_request:
     runs-on: ubuntu-latest
