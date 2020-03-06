@@ -136,6 +136,8 @@ update_draft() {
   fi
 
   local changelog;
+  echo "Gathering changelog from pull requests ..."
+  git --no-pager log --merges "$prev_tag"..HEAD
   changelog=$(.github/scripts/changelog.joke "$prev_tag" HEAD)
   echo "Updating draft release changelog contents ..."
   hub release edit --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
