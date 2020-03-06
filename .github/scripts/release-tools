@@ -131,14 +131,14 @@ update_draft() {
   local draft_tag=$LATEST_DRAFT_TAG
   if [[ -z $draft_tag ]]; then
     draft_tag=$(_next_draft_version "$prev_tag")
-    echo "Current draft release does not exist, creating new for tag $draft_tag ..."
-    echo hub release create --draft=true "$draft_tag"
+    echo "Current draft release does not exist, creating new draft '$draft_tag' ..."
+    hub release create --draft=true "$draft_tag"
   fi
 
   local changelog;
   changelog=$(.github/scripts/changelog.joke "$prev_tag" HEAD)
   echo "Updating draft release changelog contents ..."
-  echo hub release edit --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
+  hub release edit --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
 }
 
 update_prerelease() {
