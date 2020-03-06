@@ -128,18 +128,20 @@ update_draft() {
     exit 1
   fi
 
-  local draft_tag=$LATEST_DRAFT_TAG
-  if [[ -z $draft_tag ]]; then
-    draft_tag=$(_next_draft_version "$prev_tag")
-    echo "Current draft release does not exist, creating new draft '$draft_tag' ..."
-    hub release create --draft=true -m "$draft_tag (dev)" "$draft_tag"
-  fi
-
   local changelog;
   echo "Gathering changelog from pull requests, revision range '${prev_tag}..HEAD' ..."
   changelog=$(.github/scripts/changelog.joke "$prev_tag" HEAD)
-  echo "Updating draft release changelog contents ..."
-  hub release edit --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
+
+  local draft_tag=$LATEST_DRAFT_TAG
+  if [[ -z $draft_tag ]]; then
+    draft_tag=$(_next_draft_version "$prev_tag")
+    echo "Current draft release does not exist, next version is '$draft_tag'"
+  else
+    echo "Current draft release exists, deleting it (because https://github.com/github/hub/issues/1817) ..."
+    hub release delete "$draft_tag"
+  fi
+  echo "Creating draft release '$draft_tag' ..."
+  hub release create --draft=true -m "$draft_tag (dev)" -m "$changelog" "$draft_tag"
 }
 
 update_prerelease() {
