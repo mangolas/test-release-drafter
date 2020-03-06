@@ -14,7 +14,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: /opt/bin
-          key: ${{ hashFiles('.github/scripts/install-bins') }}
+          key: bins-${{ hashFiles('.github/scripts/install-bins') }}
       - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-bins
