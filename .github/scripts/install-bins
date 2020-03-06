@@ -13,7 +13,7 @@ tar xzf /tmp/hub.tgz -C /tmp
 mv /tmp/hub-*/bin/hub /opt/bin/hub
 
 JOKER_VERSION=0.14.2
-JOKER_URL="https://github.com/candid82/joker/releases/download/v${JOKER_VERSION}/joker-{JOKER_VERSION}-linux-amd64.zip"
+JOKER_URL="https://github.com/candid82/joker/releases/download/v${JOKER_VERSION}/joker-${JOKER_VERSION}-linux-amd64.zip"
 curl -L "${JOKER_URL}" -o /tmp/joker.zip
 unzip /tmp/joker.zip -d /tmp
 mv /tmp/joker /opt/bin/joker
