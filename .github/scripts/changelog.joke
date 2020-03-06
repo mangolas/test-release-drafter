@@ -16,8 +16,8 @@
     (if (:success result)
       (:out result)
       (do
-        (println "ERROR! Failed to execute:" (string/join " " args))
-        (println (:err result))
+        (pr-err "ERROR! Failed to execute:" (string/join " " args))
+        (pr-err (:err result))
         (exit (:exit result))))))
 
 (defn pull-request-ids [rev_to rev_from]
@@ -119,6 +119,7 @@
   (when-not (and revision_to revision_from)
     (println "Usage: <git revision to> <git revision from> [--query-only] eg. v2.17 HEAD")
     (exit 1))
+  (pr-err "Start creating changelog from pull requests ...")
   (->> (pull-request-ids revision_to revision_from)
        ;; Run queries simultaneously as we have to query once per pr
        (mapv #(go (query-pull-request-data %)))
