@@ -12,7 +12,9 @@ jobs:
       - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
-        with: {path: /opt/bin, key: ${{ hashFiles('.github/scripts/install-bins') }}}
+        with:
+          path: /opt/bin
+          key: ${{ hashFiles('.github/scripts/install-bins') }}
       - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-bins
@@ -42,7 +44,9 @@ jobs:
       - uses: actions/checkout@v2
       - id: cache
         uses: actions/cache@v1
-        with: {path: /opt/bin, key: ${{ hashFiles('.github/scripts/install-bins') }}}
+        with:
+          path: /opt/bin
+          key: ${{ hashFiles('.github/scripts/install-bins') }}
       - name: Install bins
         if: steps.cache.outputs.cache-hit != 'true'
         run: .github/scripts/install-bins
