@@ -117,6 +117,7 @@
   (when-not (and revision_to revision_from)
     (pr-err "Usage: <git revision to> <git revision from> [--query-only] eg. v2.17 HEAD\n")
     (exit 1))
+  (println "What the fuck" (os/args))
   (->> (pull-request-ids revision_to revision_from)
        ;; Run queries simultaneously as we have to query once per pr
        (mapv #(go (query-pull-request-data %)))
