@@ -6,7 +6,7 @@ set -eo pipefail
 
 mkdir -p /opt/bin
 
-HUB_VERSION=2.14.1
+HUB_VERSION=2.14.2
 HUB_URL="https://github.com/github/hub/releases/download/v${HUB_VERSION}/hub-linux-amd64-${HUB_VERSION}.tgz"
 curl -L "${HUB_URL}" -o /tmp/hub.tgz
 tar xzf /tmp/hub.tgz -C /tmp
