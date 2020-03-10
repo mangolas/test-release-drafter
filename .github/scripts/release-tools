@@ -169,8 +169,8 @@ update_hotfix_prerelease() {
   fi
 
   local changelog
-  echo "Gathering changelog from pull requests, revision range 'hotfix..HEAD' ..."
-  changelog=$(.github/scripts/changelog hotfix HEAD)
+  echo "Gathering changelog from pull requests, revision range '${LATEST_RELEASE_TAG}..HEAD' ..."
+  changelog=$(.github/scripts/changelog "${LATEST_RELEASE_TAG}" HEAD)
   _log_changelog "$changelog"
 
   local hotfix_tag=$LATEST_HOTFIX_PREREL_TAG
