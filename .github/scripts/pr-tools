@@ -18,6 +18,8 @@ _create_or_update_pr() {
   pr_num=$(hub pr list -f '%I' -h "$from")
   if [[ -z $pr_num ]]; then
     echo "No existing pull request, creating new ..."
+    #TODO This fails if there is no difference, for example initial master..hotfix.
+    # It should be checked and pr should be skipped if there is no changes.
     hub pull-request -b "$into" -m "$title" -m "$msg" -l skip-changelog -l "$label"
   else
     echo "Pull request exists, updating title and body only ..."
