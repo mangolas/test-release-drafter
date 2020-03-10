@@ -6,7 +6,8 @@
          '[joker.set :refer [intersection]])
 
 (defn exit [code]
-  ;; Bit hackish way to prevent real exit when running code on remote repl
+  ;; Bit hackish way to prevent real exit when running code on remote repl.
+  ;; Cursive tip: use https://github.com/mfikes/tubular to connect to Joker repl.
   (if (some #(string/includes? % "--repl") (os/args))
     (println "Would exit with code" code)
     (os/exit code)))
