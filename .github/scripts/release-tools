@@ -44,7 +44,7 @@ _merge_draft_to_prerelease() {
   )
 
   hub release edit --prerelease=true \
-  -m "$prerel_tag (test)" -m "${changelog[@]}" "$prerel_tag"
+  -m "$prerel_tag (test)" -m "${changelog[*]}" "$prerel_tag"
 
   echo "Deleting merged '$draft_tag' draft release ..."
   hub release delete "$draft_tag"
